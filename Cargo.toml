@@ -1,0 +1,19 @@
+[package]
+name = "pp-kekw"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+surrealdb = { git = "https://github.com/surrealdb/surrealdb.git", rev = "725b037" }
+
+aide = { version = "0.10.0", features = ["redoc", "axum", "axum-extra", "macros"] }
+axum = { version = "0.6.12", features = ["macros"] }
+axum-jsonschema = { version = "0.5.0", features = ["aide"] }
+serde = { version = "1.0.159", features = ["derive"] }
+tokio = { version = "1.27.0", features = ["full"] }
+
+async-trait = "0.1.68"
+axum-macros = "0.3.7"
+axum-extra = "0.7.2"
+schemars = "0.8.12"
+serde_json = "1.0.95"
