@@ -24,26 +24,4 @@
  *
  */
 
-#[macro_use]
-extern crate serde;
-#[macro_use]
-extern crate schemars;
-#[macro_use]
-extern crate async_trait;
-#[macro_use]
-extern crate aide;
-#[macro_use]
-extern crate thiserror;
-#[macro_use]
-extern crate getset;
-
-mod auth;
-mod data;
-mod error;
-
-#[tokio::main]
-async fn main() {}
-
-pub mod prelude {
-    pub use crate::error::*;
-}
+pub mod account;

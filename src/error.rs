@@ -24,26 +24,24 @@
  *
  */
 
-#[macro_use]
-extern crate serde;
-#[macro_use]
-extern crate schemars;
-#[macro_use]
-extern crate async_trait;
-#[macro_use]
-extern crate aide;
-#[macro_use]
-extern crate thiserror;
-#[macro_use]
-extern crate getset;
-
-mod auth;
-mod data;
-mod error;
-
-#[tokio::main]
-async fn main() {}
-
-pub mod prelude {
-    pub use crate::error::*;
+#[derive(Error, Debug)]
+pub enum ApplicationError {
+    #[error("Unauthorized")]
+    Unauthorized,
+    #[error("{0}")]
+    BadRequest(&'static str),
+    #[error("{0}")]
+    Forbidden(&'static str),
+    #[error(transparent)]
+    HashError(#[from] argon2::password_hash::errors::Error),
+    #[error(transparent)]
+    SystemTimeError(#[from] std::time::SystemTimeError),
 }
+
+impl From<argon2::Error> for ApplicationError {
+    fn from(_: argon2::Error) -> Self {
+        Self::Unauthorized
+    }
+}
+
+pub type Result<T> = std::result::Result<T, ApplicationError>;

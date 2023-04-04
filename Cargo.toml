@@ -9,11 +9,18 @@ surrealdb = { git = "https://github.com/surrealdb/surrealdb.git", rev = "725b037
 aide = { version = "0.10.0", features = ["redoc", "axum", "axum-extra", "macros"] }
 axum = { version = "0.6.12", features = ["macros"] }
 axum-jsonschema = { version = "0.5.0", features = ["aide"] }
+schemars = { version = "0.8.12", features = ["chrono"] }
 serde = { version = "1.0.159", features = ["derive"] }
 tokio = { version = "1.27.0", features = ["full"] }
+totp-rs = { version = "5.0.0", features = ["qr", "gen_secret"] }
 
+argon2 = "0.5.0"
 async-trait = "0.1.68"
 axum-macros = "0.3.7"
 axum-extra = "0.7.2"
-schemars = "0.8.12"
+chacha20poly1305 = "0.10.1"
+chrono = "0.4.24"
+getset = "0.1.2"
+openssl = "0.10.48"
 serde_json = "1.0.95"
+thiserror = "1.0.40"

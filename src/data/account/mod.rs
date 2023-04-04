@@ -24,26 +24,24 @@
  *
  */
 
-#[macro_use]
-extern crate serde;
-#[macro_use]
-extern crate schemars;
-#[macro_use]
-extern crate async_trait;
-#[macro_use]
-extern crate aide;
-#[macro_use]
-extern crate thiserror;
-#[macro_use]
-extern crate getset;
+use chrono::{DateTime, Utc};
 
-mod auth;
-mod data;
-mod error;
-
-#[tokio::main]
-async fn main() {}
-
-pub mod prelude {
-    pub use crate::error::*;
+#[derive(Getters, Deserialize, Serialize, Clone, Debug)]
+#[getset(get = "pub")]
+pub struct Account {
+    /// primary and unique identifier
+    pub id: String,
+    /// display name
+    pub username: String,
+    /// the double hashed password
+    pub password: String,
+    /// the totp secret
+    pub secret: String,
+    /// the hashing nonce
+    pub nonce: String,
+    /// is totp enabled
+    pub totp: bool,
+    /// is locked
+    pub locked: bool,
+    pub created_at: DateTime<Utc>,
 }
