@@ -24,19 +24,27 @@
  *
  */
 
+use crate::auth::session::{Session, SessionType};
 use crate::data::account::Account;
 use crate::prelude::*;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use chacha20poly1305::aead::{Aead, Key, OsRng};
 use chacha20poly1305::{AeadCore, KeyInit, XChaCha20Poly1305, XNonce};
+use surrealdb::Surreal;
 use totp_rs::{Algorithm, Secret, TOTP};
+
+mod session;
 
 #[async_trait]
 pub trait Authenticateable {
     async fn login(&self, password: &str, token: Option<&str>) -> Result<()>;
 
-    async fn logout(&self) -> Result<()>;
+    async fn start_session(&self, connection: &DatabaseConnection) -> Result<Session>;
+
+    async fn fetch_session(&self, connection: &DatabaseConnection) -> Result<Option<Session>>;
+
+    async fn logout(&self, connection: &DatabaseConnection) -> Result<()>;
 
     fn regenerate_secret(&mut self, password: &str) -> Result<()>;
 
@@ -46,6 +54,7 @@ pub trait Authenticateable {
 }
 
 /// Derives a (new) key from the given password using argon2id
+#[instrument(skip_all)]
 fn derive_key(password: &str, salt: &SaltString) -> Result<[u8; 32]> {
     let mut target = [0u8; 32];
     Argon2::default().hash_password_into(
@@ -57,6 +66,7 @@ fn derive_key(password: &str, salt: &SaltString) -> Result<[u8; 32]> {
 }
 
 /// Hashes the given key using argon2id
+#[instrument(skip_all)]
 fn hash_key(key: &[u8; 32]) -> String {
     let salt = SaltString::generate(&mut OsRng);
     Argon2::default()
@@ -66,6 +76,7 @@ fn hash_key(key: &[u8; 32]) -> String {
 }
 
 /// This encrypt the given data with the given key (argon2dwr hash) using xChaCha20Poly1305
+#[instrument(skip_all)]
 fn encrypt(key: &[u8; 32], data: &str) -> String {
     // setup the cipher
     let nonce = XChaCha20Poly1305::generate_nonce(&mut OsRng);
@@ -82,6 +93,7 @@ fn encrypt(key: &[u8; 32], data: &str) -> String {
 }
 
 /// This decrypts the given data with the given key (argon2d hash) using xChaCha20Poly1305
+#[instrument(skip_all)]
 fn decrypt(key: &[u8; 32], data: &str) -> String {
     // prepare the cipher
     let cipher = XChaCha20Poly1305::new(Key::<XChaCha20Poly1305>::from_slice(key));
@@ -101,6 +113,7 @@ fn decrypt(key: &[u8; 32], data: &str) -> String {
 
 #[async_trait]
 impl Authenticateable for Account {
+    #[instrument(skip_all)]
     async fn login(&self, password: &str, token: Option<&str>) -> Result<()> {
         // derive the key
         let key = self.obtain_encryption_key(password)?;
@@ -134,10 +147,32 @@ impl Authenticateable for Account {
         Ok(())
     }
 
-    async fn logout(&self) -> Result<()> {
-        todo!()
+    #[instrument(skip_all)]
+    async fn start_session(&self, connection: &DatabaseConnection) -> Result<Session> {
+        Session::init(SessionType::Human(self.id.clone()), connection).await
     }
 
+    #[instrument(skip_all)]
+    async fn fetch_session(&self, connection: &DatabaseConnection) -> Result<Option<Session>> {
+        // fetch the session
+        let session = sql_span!(connection
+            .query("SELECT * FROM session WHERE target = $target")
+            .bind(("target", self.id()))
+            .await?
+            .take::<Option<Session>>(0)?);
+
+        Ok(session)
+    }
+
+    #[instrument(skip_all)]
+    async fn logout(&self, connection: &DatabaseConnection) -> Result<()> {
+        match self.fetch_session(connection).await? {
+            Some(session) => session.end(connection).await,
+            None => Err(ApplicationError::Unauthorized),
+        }
+    }
+
+    #[instrument(skip_all)]
     fn regenerate_secret(&mut self, password: &str) -> Result<()> {
         // generate a new secret
         let secret = Secret::generate_secret();
@@ -150,6 +185,7 @@ impl Authenticateable for Account {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     fn read_secret(&self, password: &str) -> Result<String> {
         Ok(decrypt(
             &self.obtain_encryption_key(password)?,
@@ -157,6 +193,7 @@ impl Authenticateable for Account {
         ))
     }
 
+    #[instrument(skip_all)]
     fn obtain_encryption_key(&self, password: &str) -> Result<[u8; 32]> {
         Ok(derive_key(
             password,

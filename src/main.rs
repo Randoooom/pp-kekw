@@ -36,14 +36,19 @@ extern crate aide;
 extern crate thiserror;
 #[macro_use]
 extern crate getset;
+#[macro_use]
+extern crate tracing;
 
 mod auth;
 mod data;
+mod database;
 mod error;
 
 #[tokio::main]
 async fn main() {}
 
 pub mod prelude {
+    pub use crate::database::DatabaseConnection;
     pub use crate::error::*;
+    pub use crate::sql_span;
 }

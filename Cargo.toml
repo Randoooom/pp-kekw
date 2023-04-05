@@ -4,8 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-surrealdb = { git = "https://github.com/surrealdb/surrealdb.git", rev = "725b037" }
-
 aide = { version = "0.10.0", features = ["redoc", "axum", "axum-extra", "macros"] }
 axum = { version = "0.6.12", features = ["macros"] }
 axum-jsonschema = { version = "0.5.0", features = ["aide"] }
@@ -18,9 +16,14 @@ argon2 = "0.5.0"
 async-trait = "0.1.68"
 axum-macros = "0.3.7"
 axum-extra = "0.7.2"
+cfg-if = "1.0.0"
 chacha20poly1305 = "0.10.1"
 chrono = "0.4.24"
 getset = "0.1.2"
+nanoid = "0.4.0"
 openssl = "0.10.48"
 serde_json = "1.0.95"
+surrealdb = "1.0.0-beta.9+20230402"
 thiserror = "1.0.40"
+tracing = "0.1.37"
+version-compare = "0.1.1"
