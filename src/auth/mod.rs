@@ -31,7 +31,6 @@ use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use chacha20poly1305::aead::{Aead, Key, OsRng};
 use chacha20poly1305::{AeadCore, KeyInit, XChaCha20Poly1305, XNonce};
-use surrealdb::Surreal;
 use totp_rs::{Algorithm, Secret, TOTP};
 
 mod session;

@@ -36,6 +36,8 @@ pub enum ApplicationError {
     HashError(#[from] argon2::password_hash::errors::Error),
     #[error(transparent)]
     SystemTimeError(#[from] std::time::SystemTimeError),
+    #[error(transparent)]
+    SurrealdbError(#[from] surrealdb::Error),
 }
 
 impl From<argon2::Error> for ApplicationError {

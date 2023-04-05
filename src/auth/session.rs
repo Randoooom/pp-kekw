@@ -24,7 +24,6 @@
  *
  */
 
-use crate::data::account::Account;
 use crate::prelude::*;
 use chrono::{Duration, Utc};
 
@@ -124,8 +123,8 @@ impl Session {
 
     /// Ends the given session
     #[instrument(skip_all)]
-    pub async fn end(self, connection: &DatabaseConnection) -> Result<()> {
-        sql_span!(connection.delete(("session", self.id)).await?);
+    pub async fn end(&self, connection: &DatabaseConnection) -> Result<()> {
+        sql_span!(connection.delete(("session", &self.id)).await?);
 
         Ok(())
     }
