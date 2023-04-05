@@ -33,7 +33,8 @@ use chacha20poly1305::aead::{Aead, Key, OsRng};
 use chacha20poly1305::{AeadCore, KeyInit, XChaCha20Poly1305, XNonce};
 use totp_rs::{Algorithm, Secret, TOTP};
 
-mod session;
+pub mod authz;
+pub mod session;
 
 #[async_trait]
 pub trait Authenticateable {

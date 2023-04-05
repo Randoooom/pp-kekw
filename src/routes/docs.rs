@@ -25,43 +25,44 @@
  */
 
 use crate::prelude::*;
-use chrono::{DateTime, Utc};
+use aide::axum::routing::get_with;
+use aide::axum::{ApiRouter, IntoApiResponse};
+use aide::openapi::OpenApi;
+use aide::redoc::Redoc;
+use aide::transform::TransformOpenApi;
+use axum::response::IntoResponse;
+use axum::routing::get;
+use axum::Extension;
+use std::ops::Deref;
+use std::sync::Arc;
 
-#[derive(Getters, Deserialize, Serialize, Clone, Debug)]
-#[getset(get = "pub")]
-pub struct Account {
-    /// primary and unique identifier
-    pub id: String,
-    /// display name
-    pub username: String,
-    /// the double hashed password
-    pub password: String,
-    /// the totp secret
-    pub secret: String,
-    /// the hashing nonce
-    pub nonce: String,
-    /// is totp enabled
-    pub totp: bool,
-    /// is locked
-    pub locked: bool,
-    pub created_at: DateTime<Utc>,
+pub fn router(state: ApplicationState) -> ApiRouter {
+    aide::gen::infer_responses(true);
+
+    let router = ApiRouter::new()
+        .api_route(
+            "/",
+            get_with(
+                Redoc::new("/docs/private/api.json")
+                    .with_title("Redoc")
+                    .axum_handler(),
+                |op| op.description("This documentation page."),
+            ),
+        )
+        .route("/private/api.json", get(serve_docs))
+        .with_state(state);
+
+    aide::gen::infer_responses(false);
+
+    router
 }
 
-impl Account {
-    /// Get an instance of an account by the given username. This operation will fail if the username
-    /// cant be associated with an account.
-    #[instrument(skip(connection))]
-    pub async fn from_username(
-        username: &str,
-        connection: &DatabaseConnection,
-    ) -> Result<Option<Self>> {
-        // fetch the account from the database
-        let account = sql_span!(connection
-            .query("SELECT * FROM account WHERE username = $username")
-            .bind(("username", username))
-            .await?
-            .take::<Option<Account>>(0)?);
+async fn serve_docs(Extension(api): Extension<Arc<OpenApi>>) -> impl IntoApiResponse {
+    Json(api.deref()).into_response()
+}
 
-        Ok(account)
-    }
+pub fn transform_api(api: TransformOpenApi) -> TransformOpenApi {
+    api.title("PP-Kekw")
+        .summary("The better version")
+        .description("ADVERTISE HERE PLEASE")
 }

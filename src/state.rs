@@ -24,44 +24,16 @@
  *
  */
 
-use crate::prelude::*;
-use chrono::{DateTime, Utc};
+use crate::prelude::DatabaseConnection;
 
-#[derive(Getters, Deserialize, Serialize, Clone, Debug)]
-#[getset(get = "pub")]
-pub struct Account {
-    /// primary and unique identifier
-    pub id: String,
-    /// display name
-    pub username: String,
-    /// the double hashed password
-    pub password: String,
-    /// the totp secret
-    pub secret: String,
-    /// the hashing nonce
-    pub nonce: String,
-    /// is totp enabled
-    pub totp: bool,
-    /// is locked
-    pub locked: bool,
-    pub created_at: DateTime<Utc>,
+#[derive(Clone, Debug, Getters)]
+#[get = "pub"]
+pub struct ApplicationState {
+    connection: DatabaseConnection,
 }
 
-impl Account {
-    /// Get an instance of an account by the given username. This operation will fail if the username
-    /// cant be associated with an account.
-    #[instrument(skip(connection))]
-    pub async fn from_username(
-        username: &str,
-        connection: &DatabaseConnection,
-    ) -> Result<Option<Self>> {
-        // fetch the account from the database
-        let account = sql_span!(connection
-            .query("SELECT * FROM account WHERE username = $username")
-            .bind(("username", username))
-            .await?
-            .take::<Option<Account>>(0)?);
-
-        Ok(account)
+impl From<DatabaseConnection> for ApplicationState {
+    fn from(connection: DatabaseConnection) -> Self {
+        Self { connection }
     }
 }

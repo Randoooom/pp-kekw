@@ -37,6 +37,21 @@ const SURREALDB_PASSWORD: &str = "SURREALDB_PASSWORD";
 
 pub type DatabaseConnection = Surreal<Client>;
 
+#[derive(Deserialize)]
+pub struct DatabaseResult<T> {
+    pub result: T,
+}
+
+impl DatabaseResult<bool> {
+    pub fn is_ok(&self) -> Result<()> {
+        return if self.result {
+            Ok(())
+        } else {
+            Err(ApplicationError::Unauthorized)
+        };
+    }
+}
+
 pub async fn connect(up: &'static str) -> Result<DatabaseConnection> {
     // establish the connection
     let client: Surreal<Client> = Surreal::new::<Ws>(
@@ -72,7 +87,7 @@ pub async fn connect(up: &'static str) -> Result<DatabaseConnection> {
         } else {
             client
                 .use_ns("production")
-                .use_db("template-service")
+                .use_db("pp")
                 .await?;
         }
     }
@@ -83,6 +98,8 @@ pub async fn connect(up: &'static str) -> Result<DatabaseConnection> {
 
     // perform the migrations
     migrate(&client, env!("CARGO_PKG_VERSION"), Vec::new()).await?;
+    // init the permissions
+    crate::auth::authz::permission::init_permissions(&client).await?;
 
     Ok(client)
 }

@@ -38,17 +38,53 @@ extern crate thiserror;
 extern crate getset;
 #[macro_use]
 extern crate tracing;
+#[macro_use]
+extern crate serde_json;
+#[macro_use]
+extern crate axum_macros;
+
+use crate::prelude::ApplicationState;
+use aide::axum::ApiRouter;
+use aide::openapi::OpenApi;
+use axum::{BoxError, Extension};
+use std::net::SocketAddr;
+use std::sync::Arc;
 
 mod auth;
 mod data;
 mod database;
 mod error;
+mod routes;
+mod state;
 
 #[tokio::main]
-async fn main() {}
+async fn main() -> Result<(), BoxError> {
+    // connect to the database
+    let connection = database::connect(include_str!("./database/surreal/up.surrealql")).await?;
+    let state = ApplicationState::from(connection);
+
+    aide::gen::extract_schemas(true);
+    let mut api = OpenApi::default();
+    let router = ApiRouter::new()
+        .nest_api_service("/docs", routes::docs::router(state.clone()))
+        .finish_api_with(&mut api, routes::docs::transform_api)
+        .layer(Extension(Arc::new(api)))
+        .with_state(state);
+
+    // start the axum server
+    let address = SocketAddr::from(([0, 0, 0, 0], 8000));
+    axum::Server::bind(&address)
+        .serve(router.into_make_service())
+        .await
+        .unwrap();
+
+    Ok(())
+}
 
 pub mod prelude {
     pub use crate::database::DatabaseConnection;
     pub use crate::error::*;
+    pub use crate::routes::extractor::Json;
     pub use crate::sql_span;
+    pub use crate::state::ApplicationState;
 }

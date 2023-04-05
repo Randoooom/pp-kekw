@@ -24,6 +24,10 @@
  *
  */
 
+use crate::prelude::*;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+
 #[derive(Error, Debug)]
 pub enum ApplicationError {
     #[error("Unauthorized")]
@@ -38,6 +42,8 @@ pub enum ApplicationError {
     SystemTimeError(#[from] std::time::SystemTimeError),
     #[error(transparent)]
     SurrealdbError(#[from] surrealdb::Error),
+    #[error("Internal error occurred")]
+    InternalServerError,
 }
 
 impl From<argon2::Error> for ApplicationError {
@@ -47,3 +53,29 @@ impl From<argon2::Error> for ApplicationError {
 }
 
 pub type Result<T> = std::result::Result<T, ApplicationError>;
+
+impl IntoResponse for ApplicationError {
+    fn into_response(self) -> Response {
+        match self {
+            ApplicationError::Unauthorized => (
+                StatusCode::UNAUTHORIZED,
+                Json(json!({"error": "Unauthorized"})),
+            ),
+            ApplicationError::BadRequest(error) => {
+                (StatusCode::BAD_REQUEST, Json(json!({ "error": error })))
+            }
+            ApplicationError::Forbidden(error) => {
+                (StatusCode::FORBIDDEN, Json(json!({ "error": error })))
+            }
+            _ => {
+                error!("{}", self.to_string());
+
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({"error": "Error occurred while processing the request"})),
+                )
+            }
+        }
+        .into_response()
+    }
+}
