@@ -24,18 +24,57 @@
  *
  */
 
+use crate::data::account::create::CreateAccount;
 use crate::prelude::*;
+use aide::axum::routing::post_with;
 use aide::axum::ApiRouter;
-
-mod account;
-mod auth;
-pub mod docs;
-pub mod extractor;
-mod middleware;
+use aide::transform::TransformOperation;
+use axum::extract::State;
+use axum::http::StatusCode;
 
 pub fn router(state: ApplicationState) -> ApiRouter {
     ApiRouter::new()
-        .nest_api_service("/auth", auth::router(state.clone()))
-        .nest_api_service("/account", account::router(state.clone()))
+        .api_route("/signup", post_with(signup, signup_docs))
         .with_state(state)
+}
+
+async fn signup(
+    State(state): State<ApplicationState>,
+    Json(data): Json<CreateAccount>,
+) -> Result<StatusCode> {
+    let connection = state.connection();
+
+    data.create(connection).await?;
+    Ok(StatusCode::CREATED)
+}
+
+fn signup_docs(op: TransformOperation) -> TransformOperation {
+    op.description("SignUp a new account")
+        .response::<201, StatusCode>()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::tests::TestSuite;
+    use axum::http::StatusCode;
+    use axum::BoxError;
+
+    #[tokio::test]
+    async fn test_signup() -> Result<(), BoxError> {
+        let suite = TestSuite::start().await?;
+
+        let response = suite
+            .connector()
+            .post("/account/signup")
+            .json(&serde_json::json! ({
+                "username": "username",
+                "password": "password"
+            }))
+            .send()
+            .await;
+        assert_eq!(StatusCode::CREATED, response.status());
+        assert!(suite.try_login("username", "password", None).await.is_ok());
+
+        Ok(())
+    }
 }

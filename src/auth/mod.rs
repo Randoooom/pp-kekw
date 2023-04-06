@@ -55,7 +55,7 @@ pub trait Authenticateable {
 
 /// Derives a (new) key from the given password using argon2id
 #[instrument(skip_all)]
-fn derive_key(password: &str, salt: &SaltString) -> Result<[u8; 32]> {
+pub fn derive_key(password: &str, salt: &SaltString) -> Result<[u8; 32]> {
     let mut target = [0u8; 32];
     Argon2::default().hash_password_into(
         password.as_bytes(),
@@ -67,7 +67,7 @@ fn derive_key(password: &str, salt: &SaltString) -> Result<[u8; 32]> {
 
 /// Hashes the given key using argon2id
 #[instrument(skip_all)]
-fn hash_key(key: &[u8; 32]) -> String {
+pub fn hash_key(key: &[u8; 32]) -> String {
     let salt = SaltString::generate(&mut OsRng);
     Argon2::default()
         .hash_password(key, &salt)
@@ -149,7 +149,7 @@ impl Authenticateable for Account {
 
     #[instrument(skip_all)]
     async fn start_session(&self, connection: &DatabaseConnection) -> Result<Session> {
-        Session::init(SessionType::Human(self.id.clone()), connection).await
+        Session::init(SessionType::Human(self.id.to_string()), connection).await
     }
 
     #[instrument(skip_all)]
@@ -209,6 +209,7 @@ mod tests {
     use argon2::password_hash::rand_core::OsRng;
     use argon2::password_hash::SaltString;
     use chrono::{Duration, Local};
+    use surrealdb::sql::Thing;
     use totp_rs::{Algorithm, TOTP};
 
     #[tokio::test]
@@ -218,8 +219,8 @@ mod tests {
         let salt = SaltString::generate(&mut OsRng);
         let hash = hash_key(&derive_key(password, &salt).unwrap());
         let account = Account {
-            id: "".to_string(),
-            username: "".to_string(),
+            id: Thing::from(("account", "")),
+            uuid: None,
             password: hash,
             secret: "".to_string(),
             nonce: salt.to_string(),
@@ -239,8 +240,8 @@ mod tests {
         let hash = hash_key(&derive_key(password, &salt).unwrap());
 
         let mut account = Account {
-            id: "".to_string(),
-            username: "".to_string(),
+            id: Thing::from(("account", "")),
+            uuid: None,
             password: hash,
             secret: "".to_string(),
             nonce: salt.to_string(),
@@ -283,8 +284,8 @@ mod tests {
         let password = "password";
 
         let account = Account {
-            id: "".to_string(),
-            username: "".to_string(),
+            id: Thing::from(("account", "")),
+            uuid: None,
             password: "".to_string(),
             secret: "".to_string(),
             nonce: SaltString::generate(&mut OsRng).to_string(),

@@ -28,7 +28,7 @@ use crate::prelude::*;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, OperationIo)]
 pub enum ApplicationError {
     #[error("Unauthorized")]
     Unauthorized,
@@ -44,6 +44,11 @@ pub enum ApplicationError {
     SurrealdbError(#[from] surrealdb::Error),
     #[error("Internal error occurred")]
     InternalServerError,
+}
+
+#[derive(Serialize, Debug, JsonSchema)]
+pub struct ApplicationErrorResponse {
+    error: String,
 }
 
 impl From<argon2::Error> for ApplicationError {
@@ -69,6 +74,7 @@ impl IntoResponse for ApplicationError {
             }
             _ => {
                 error!("{}", self.to_string());
+                println!("{:?}", self.to_string());
 
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,

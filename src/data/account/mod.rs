@@ -26,14 +26,18 @@
 
 use crate::prelude::*;
 use chrono::{DateTime, Utc};
+use surrealdb::sql::Thing;
+
+pub mod create;
 
 #[derive(Getters, Deserialize, Serialize, Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 #[getset(get = "pub")]
 pub struct Account {
     /// primary and unique identifier
-    pub id: String,
-    /// display name
-    pub username: String,
+    pub id: Thing,
+    /// the uuid of the linked minecraft account
+    pub uuid: Option<String>,
     /// the double hashed password
     pub password: String,
     /// the totp secret
@@ -63,5 +67,35 @@ impl Account {
             .take::<Option<Account>>(0)?);
 
         Ok(account)
+    }
+
+    /// Get an instance of an account by the given id. This operation will fail if the id
+    /// cant be associated with an account.
+    #[instrument(skip(connection))]
+    pub async fn from_id(id: &str, connection: &DatabaseConnection) -> Result<Option<Self>> {
+        // fetch the account from the database
+        let account = sql_span!(connection
+            .query("SELECT * FROM $account")
+            .bind(("account", id))
+            .await?
+            .take::<Option<Account>>(0)?);
+
+        Ok(account)
+    }
+
+    /// link the account with the given minecraft uuid.
+    #[instrument(skip_all)]
+    pub async fn link(&mut self, uuid: &str, connection: &DatabaseConnection) -> Result<()> {
+        self.uuid = Some(uuid.to_string());
+        // update in the database
+        sql_span!(
+            connection
+                .query("UPDATE $account SET uuid = $uuid")
+                .bind(("account", self.id()))
+                .bind(("uuid", uuid))
+                .await?
+        );
+
+        Ok(())
     }
 }

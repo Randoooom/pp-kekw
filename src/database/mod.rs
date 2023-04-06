@@ -52,7 +52,7 @@ impl DatabaseResult<bool> {
     }
 }
 
-pub async fn connect(up: &'static str) -> Result<DatabaseConnection> {
+pub async fn connect() -> Result<DatabaseConnection> {
     // establish the connection
     let client: Surreal<Client> = Surreal::new::<Ws>(
         std::env::var(SURREALDB_ENDPOINT)
@@ -76,7 +76,7 @@ pub async fn connect(up: &'static str) -> Result<DatabaseConnection> {
 
     // use namespace and database
     cfg_if::cfg_if! {
-        if #[cfg(feature = "testing")] {
+        if #[cfg(test)] {
             let db = nanoid::nanoid!();
             info!("Using database {db}");
 
@@ -93,13 +93,13 @@ pub async fn connect(up: &'static str) -> Result<DatabaseConnection> {
     }
 
     // execute the up queries
-    client.query(up).await?;
+    client.query(include_str!("./surreal/up.surrealql")).await?;
     info!("Initiated tables");
 
     // perform the migrations
     migrate(&client, env!("CARGO_PKG_VERSION"), Vec::new()).await?;
     // init the permissions
-    crate::auth::authz::permission::init_permissions(&client).await?;
+    init_permissions(&client).await?;
 
     Ok(client)
 }

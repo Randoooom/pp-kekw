@@ -26,6 +26,7 @@
 
 use crate::prelude::*;
 use chrono::{Duration, Utc};
+use surrealdb::sql::Thing;
 
 /// The length of an issued session in seconds.
 /// Default is 3600(1 hour)
@@ -35,7 +36,8 @@ const REFRESH_LENGTH: i64 = 5400;
 
 /// The type of the issued session. Available are `Machine` which represents an API-Client or similar
 /// things identified by their internal id. `Human` represents the id of the concerned `Account`
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(tag = "type", content = "id")]
 pub enum SessionType {
     Machine(String),
     Human(String),
@@ -52,14 +54,30 @@ impl ToString for SessionType {
 
 /// A session stores all the relevant information needed to authenticate and authorize incoming requests
 /// by their given `sessionId`. All sessions can be refreshed
-#[derive(Clone, Debug, Getters, Deserialize, Serialize)]
+#[derive(Clone, Debug, Getters, Deserialize, Serialize, JsonSchema)]
 pub struct Session {
-    id: String,
+    /// the session id which will be used to authenticate the requests
+    #[schemars(with = "String")]
+    id: Thing,
+    /// the type of the session target. This can be a machine / api or an human user with it's Account.
     #[get = "pub"]
     target: SessionType,
+    /// session started at timestamp (seconds)
     #[get = "pub"]
     iat: i64,
+    /// session ends at timestamp (seconds)
     #[get = "pub"]
+    exp: i64,
+    /// token for rereshing the session on the `/auth/refresh` route
+    refresh_token: String,
+    /// refresh ends at timestamp (seconds)
+    refresh_exp: i64,
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct CreateSession {
+    target: SessionType,
+    iat: i64,
     exp: i64,
     refresh_token: String,
     refresh_exp: i64,
@@ -78,8 +96,7 @@ impl Session {
             "end existing sessions"
         );
 
-        let session = Self {
-            id: nanoid::nanoid!(32),
+        let session = CreateSession {
             target,
             iat: Utc::now().timestamp(),
             exp: (Utc::now() + Duration::seconds(SESSION_LENGTH)).timestamp(),
@@ -87,24 +104,25 @@ impl Session {
             refresh_exp: (Utc::now() + Duration::seconds(REFRESH_LENGTH)).timestamp(),
         };
         // save the session into the database
-        sql_span!(
-            connection
-                .create(("session", session.id.clone()))
-                .content(&session)
-                .await?
-        );
+        let session: Session = sql_span!(connection.create("session").content(&session).await?);
 
         Ok(session)
     }
 
     /// Check whether the given session is valid or not.
     #[instrument(skip(connection))]
-    pub async fn is_session_valid(id: &str, connection: &DatabaseConnection) -> Result<()> {
+    pub async fn is_session_valid(id: &str, connection: &DatabaseConnection) -> Result<Session> {
         // try to fetch the session out of the database
         let session: Option<Session> = sql_span!(connection.select(("session", id)).await?);
 
         match session {
-            Some(session) => Self::is_valid(&session, connection).await,
+            Some(session) => {
+                return if Self::is_valid(&session, connection).await.is_ok() {
+                    Ok(session)
+                } else {
+                    Err(ApplicationError::Unauthorized)
+                }
+            }
             None => Err(ApplicationError::Unauthorized),
         }
     }
@@ -124,7 +142,11 @@ impl Session {
     /// Ends the given session
     #[instrument(skip_all)]
     pub async fn end(&self, connection: &DatabaseConnection) -> Result<()> {
-        sql_span!(connection.delete(("session", &self.id)).await?);
+        sql_span!(
+            connection
+                .delete(("session", self.id.id.to_string()))
+                .await?
+        );
 
         Ok(())
     }
@@ -146,7 +168,7 @@ impl Session {
             // push the changes into the database
             sql_span!(
                 connection
-                    .update(("session", &self.id))
+                    .update(("session", &self.id.id.to_string()))
                     .content(&self)
                     .await?
             );
@@ -157,5 +179,16 @@ impl Session {
 
             Err(ApplicationError::Unauthorized)
         };
+    }
+
+    /// Fetch a session by its id.
+    pub async fn from_id(id: &str, connection: &DatabaseConnection) -> Result<Option<Self>> {
+        let session = connection
+            .query("SELECT * FROM session WHERE id = $id")
+            .bind(("id", id))
+            .await?
+            .take::<Option<Session>>(0)?;
+
+        Ok(session)
     }
 }

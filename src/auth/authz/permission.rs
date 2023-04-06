@@ -26,7 +26,7 @@
 
 use crate::prelude::*;
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Permission {
     pub id: String,
@@ -42,6 +42,10 @@ macro_rules! permissions {
                     }
                 };
             )*
+
+            pub static ref DEFAULT: Permission = Permission {
+                                                id: "none".to_string(),
+                                            };
 
             pub static ref PERMISSIONS: Vec<&'static Permission> = {
                 vec![

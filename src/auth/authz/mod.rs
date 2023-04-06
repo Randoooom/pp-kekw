@@ -54,6 +54,10 @@ impl Authorizable for Account {
         permission: &Permission,
         connection: &DatabaseConnection,
     ) -> Result<()> {
+        if permission.eq(&&DEFAULT) {
+            return Ok(());
+        }
+
         // query in the database
         let result = sql_span!(
             connection
