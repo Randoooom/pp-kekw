@@ -69,7 +69,7 @@ pub async fn router() -> Result<Router, BoxError> {
     let mut api = OpenApi::default();
     Ok(ApiRouter::new()
         .nest_api_service("/docs", routes::docs::router(state.clone()))
-        .nest_api_service("/", routes::router(state.clone()))
+        .nest_api_service("/", routes::router(state))
         .finish_api_with(&mut api, routes::docs::transform_api)
         .layer(Extension(Arc::new(api))))
 }

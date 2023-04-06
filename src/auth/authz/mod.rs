@@ -54,7 +54,7 @@ impl Authorizable for Account {
         permission: &Permission,
         connection: &DatabaseConnection,
     ) -> Result<()> {
-        if permission.eq(&&DEFAULT) {
+        if permission.eq(&DEFAULT) {
             return Ok(());
         }
 

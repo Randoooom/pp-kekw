@@ -27,15 +27,15 @@
 #[macro_export]
 macro_rules! require_session {
     ($state:ident, $permission:path) => {{
-        use crate::auth::authz::Authorizable;
-        use crate::auth::session::{Session, SessionType};
-        use crate::data::account::Account;
-        use crate::prelude::*;
         use axum::extract::State;
         use axum::http::header::AUTHORIZATION;
         use axum::http::Request;
         use axum::middleware::Next;
         use axum::response::{IntoResponse, Response};
+        use $crate::auth::authz::Authorizable;
+        use $crate::auth::session::{Session, SessionType};
+        use $crate::data::account::Account;
+        use $crate::prelude::*;
 
         async fn require_session<B>(
             State(state): State<ApplicationState>,

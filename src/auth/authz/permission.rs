@@ -83,15 +83,10 @@ pub async fn init_permissions(connection: &DatabaseConnection) -> Result<()> {
     let mut query = String::new();
     PERMISSIONS
         .iter()
-        .filter(|permission| {
-            permissions
-                .iter()
-                .find(|p| p.id.eq(&permission.id))
-                .is_none()
-        })
+        .filter(|permission| !permissions.iter().any(|p| p.id.eq(&permission.id)))
         .for_each(|permission| {
             query.push_str(
-                format!("CREATE permission:{};", &permission.id.replace(".", "")).as_str(),
+                format!("CREATE permission:{};", &permission.id.replace('.', "")).as_str(),
             )
         });
     // execute the query

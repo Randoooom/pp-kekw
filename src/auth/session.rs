@@ -117,7 +117,7 @@ impl Session {
 
         match session {
             Some(session) => {
-                return if Self::is_valid(&session, connection).await.is_ok() {
+                if Self::is_valid(&session, connection).await.is_ok() {
                     Ok(session)
                 } else {
                     Err(ApplicationError::Unauthorized)
@@ -129,14 +129,14 @@ impl Session {
 
     #[instrument(skip_all)]
     pub async fn is_valid(&self, connection: &DatabaseConnection) -> Result<()> {
-        return if Utc::now().timestamp() >= self.exp {
+        if Utc::now().timestamp() >= self.exp {
             // the session is not anymore valid, so we end it.
             self.end(connection).await?;
 
             Err(ApplicationError::Unauthorized)
         } else {
             Ok(())
-        };
+        }
     }
 
     /// Ends the given session
@@ -157,7 +157,7 @@ impl Session {
         refresh_token: &str,
         connection: &DatabaseConnection,
     ) -> Result<()> {
-        return if self.refresh_token.eq(refresh_token) {
+        if self.refresh_token.eq(refresh_token) {
             // change the iat and the exp
             self.iat = Utc::now().timestamp();
             self.exp = (Utc::now() + Duration::seconds(SESSION_LENGTH)).timestamp();
@@ -178,7 +178,7 @@ impl Session {
             self.end(connection).await?;
 
             Err(ApplicationError::Unauthorized)
-        };
+        }
     }
 
     /// Fetch a session by its id.

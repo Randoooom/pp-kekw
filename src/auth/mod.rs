@@ -99,13 +99,13 @@ fn decrypt(key: &[u8; 32], data: &str) -> String {
     let cipher = XChaCha20Poly1305::new(Key::<XChaCha20Poly1305>::from_slice(key));
 
     // read the encrypted data
-    let mut split = data.split(":");
+    let mut split = data.split(':');
     let nonce = openssl::base64::decode_block(split.next().unwrap()).unwrap();
     let data = openssl::base64::decode_block(split.next().unwrap()).unwrap();
 
     // decrypt the secret
     let nonce = XNonce::from_slice(nonce.as_slice());
-    let decrypted = cipher.decrypt(&nonce, data.as_slice()).unwrap();
+    let decrypted = cipher.decrypt(nonce, data.as_slice()).unwrap();
 
     // convert to the utf8 encoded base32
     String::from_utf8(decrypted).unwrap()
@@ -195,10 +195,7 @@ impl Authenticateable for Account {
 
     #[instrument(skip_all)]
     fn obtain_encryption_key(&self, password: &str) -> Result<[u8; 32]> {
-        Ok(derive_key(
-            password,
-            &SaltString::from_b64(self.nonce().as_str())?,
-        )?)
+        derive_key(password, &SaltString::from_b64(self.nonce().as_str())?)
     }
 }
 

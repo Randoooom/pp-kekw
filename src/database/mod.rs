@@ -44,11 +44,11 @@ pub struct DatabaseResult<T> {
 
 impl DatabaseResult<bool> {
     pub fn is_ok(&self) -> Result<()> {
-        return if self.result {
+        if self.result {
             Ok(())
         } else {
             Err(ApplicationError::Unauthorized)
-        };
+        }
     }
 }
 
