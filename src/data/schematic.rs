@@ -24,7 +24,20 @@
  *
  */
 
-pub mod account;
-pub mod event;
-pub mod news;
-pub mod schematic;
+use crate::prelude::*;
+use chrono::{DateTime, Utc};
+
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, JsonSchema, Getters)]
+#[get = "pub"]
+pub struct Schematic {
+    id: Id,
+    /// the name of the schematic
+    name: String,
+    /// the base64 encoded schematic file
+    data: String,
+    /// the minecraft uuid
+    owner: String,
+    /// TODO: may add updated_at and other logging functions for downloads etc
+    #[serde(alias = "created_at")]
+    created_at: DateTime<Utc>,
+}

@@ -49,6 +49,8 @@ use aide::openapi::OpenApi;
 use axum::{BoxError, Extension, Router};
 use std::net::SocketAddr;
 use std::sync::Arc;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 mod auth;
 mod data;
@@ -75,6 +77,11 @@ pub async fn router(connection: DatabaseConnection) -> Result<Router, BoxError> 
 
 #[tokio::main]
 async fn main() -> Result<(), BoxError> {
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
     let connection = database::connect().await?;
     let router = router(connection).await?;
 

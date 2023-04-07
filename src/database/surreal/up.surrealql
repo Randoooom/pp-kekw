@@ -31,3 +31,10 @@ DEFINE TABLE news SCHEMAFULL;
     DEFINE FIELD content        on news TYPE string    ASSERT $value IS NOT NULL;
     DEFINE FIELD shown          on news TYPE bool      VALUE $value OR FALSE;
     DEFINE FIELD created_at     on news TYPE datetime  VALUE $before OR time::now();
+
+DEFINE TABLE schematic SCHEMAFULL;
+    DEFINE FIELD data       on schematic TYPE string    ASSERT $value IS NOT NULL;
+    DEFINE FIELD name       on schematic TYPE string    ASSERT $value IS NOT NULL;
+    DEFINE FIELD owner      on schematic TYPE string    ASSERT $value IS NOT NULL;
+    DEFINE FIELD created_at on schematic TYPE datetime  VALUE $before OR time::now();
+    DEFINE INDEX nameIndex  on table schematic          COLUMNS name UNIQUE;

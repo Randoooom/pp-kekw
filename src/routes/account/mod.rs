@@ -32,9 +32,12 @@ use aide::transform::TransformOperation;
 use axum::extract::State;
 use axum::http::StatusCode;
 
+mod schematic;
+
 pub fn router(state: ApplicationState) -> ApiRouter {
     ApiRouter::new()
         .api_route("/signup", post_with(signup, signup_docs))
+        .nest_api_service("/:account_id/schematic", schematic::router(state.clone()))
         .with_state(state)
 }
 
