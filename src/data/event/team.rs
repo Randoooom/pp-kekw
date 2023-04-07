@@ -24,6 +24,18 @@
  *
  */
 
-pub mod account;
-pub mod event;
-pub mod news;
+use crate::prelude::*;
+
+#[derive(Deserialize, Serialize, Debug, Clone, Getters, JsonSchema)]
+#[get = "pub"]
+pub struct EventTeam {
+    id: Id,
+    /// the name of the team
+    name: String,
+    /// a shortened version of the full name
+    token: String,
+    /// the event the team is created for
+    event: Id,
+    /// all the members of the team (uuid)
+    members: Vec<String>,
+}

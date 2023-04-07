@@ -64,7 +64,7 @@ macro_rules! require_session {
                             let extensions = request.extensions_mut();
 
                             if let SessionType::Human(id) = session.target() {
-                                let account = Account::from_id(id.as_str(), connection)
+                                let account = Account::from_id(id.to_string().as_str(), connection)
                                     .await
                                     .unwrap()
                                     .unwrap();

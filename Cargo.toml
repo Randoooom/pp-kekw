@@ -5,13 +5,15 @@ edition = "2021"
 
 [dependencies]
 aide = { version = "0.10.0", features = ["redoc", "axum", "axum-extra", "macros"] }
-axum = { version = "0.6.12", features = ["macros"] }
+axum = { version = "0.6.12", features = ["macros", "multipart"] }
 axum-jsonschema = { version = "0.5.0", features = ["aide"] }
 schemars = { version = "0.8.12", features = ["chrono"] }
 serde = { version = "1.0.159", features = ["derive"] }
 tokio = { version = "1.27.0", features = ["full"] }
+tokio-util = { version = "0.7.7", features = ["io"] }
 totp-rs = { version = "5.0.0", features = ["qr", "gen_secret"] }
 
+ammonia = "3.3.0"
 argon2 = "0.5.0"
 async-trait = "0.1.68"
 axum-macros = "0.3.7"
@@ -19,6 +21,7 @@ axum-extra = "0.7.2"
 cfg-if = "1.0.0"
 chacha20poly1305 = "0.10.1"
 chrono = "0.4.24"
+futures = "0.3.27"
 getset = "0.1.2"
 lazy_static = "1.4.0"
 nanoid = "0.4.0"

@@ -25,11 +25,25 @@
  */
 
 use crate::prelude::*;
+use surrealdb::sql::Thing;
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Permission {
-    pub id: String,
+    pub id: Id,
+}
+
+impl Permission {
+    pub fn id(&self) -> String {
+        self.id.to_string().replace('.', "")
+    }
+
+    pub fn to_thing(&self) -> Thing {
+        Thing::from((
+            "permission",
+            self.id.id.to_string().replace('.', "").as_str(),
+        ))
+    }
 }
 
 macro_rules! permissions {
@@ -38,13 +52,13 @@ macro_rules! permissions {
             $(
                 pub static ref $ident: Permission = {
                     Permission {
-                        id: $name.to_string()
+                        id: Id::new(("permission", $name))
                     }
                 };
             )*
 
             pub static ref DEFAULT: Permission = Permission {
-                                                id: "none".to_string(),
+                                                id: Id::new(("permission", "none")),
                                             };
 
             pub static ref PERMISSIONS: Vec<&'static Permission> = {
@@ -62,6 +76,7 @@ permissions!(
     (NEWS_CREATE, "news.create"),
     (NEWS_UPDATE, "news.update"),
     (NEWS_DELETE, "news.delete"),
+    (NEWS_GET_ALL, "news.get.all"),
     // --------------------------------
     (EVENT_CREATE, "event.create"),
     (EVENT_UPDATE, "event.update"),
@@ -83,14 +98,20 @@ pub async fn init_permissions(connection: &DatabaseConnection) -> Result<()> {
     let mut query = String::new();
     PERMISSIONS
         .iter()
-        .filter(|permission| !permissions.iter().any(|p| p.id.eq(&permission.id)))
+        .filter(|permission| {
+            !permissions
+                .iter()
+                .any(|p| p.id.to_string().eq(&permission.id()))
+        })
         .for_each(|permission| {
             query.push_str(
-                format!("CREATE permission:{};", &permission.id.replace('.', "")).as_str(),
+                format!("CREATE {};", &permission.id.to_string().replace('.', "")).as_str(),
             )
         });
-    // execute the query
-    connection.query(query.as_str()).await?;
+    if query.len() > 0 {
+        // execute the query
+        connection.query(query.as_str()).await?.check()?;
+    }
 
     Ok(())
 }

@@ -100,6 +100,7 @@ fn logout_docs(op: TransformOperation<'_>) -> TransformOperation {
     op.description("End an ongoing session")
         .response::<200, StatusCode>()
         .response::<401, Json<ApplicationErrorResponse>>()
+        .security_requirement("Session")
 }
 
 #[derive(Deserialize, JsonSchema, Debug, Clone)]

@@ -59,15 +59,14 @@ impl Authorizable for Account {
         }
 
         // query in the database
-        let result = sql_span!(
-            connection
-                .query("select $permission INSIDE ->has->permission.id as result from $account",)
-                .bind(("permission", &permission.id))
-                .bind(("account", self.id()))
-                .await?
-        )
-        .take::<Option<DatabaseResult<bool>>>(0)?
-        .ok_or(ApplicationError::InternalServerError)?;
+        let result =
+            sql_span!(connection
+            .query("select $permission INSIDE ->has->permission.id as result from $account",)
+            .bind(("permission", permission.to_thing()))
+            .bind(("account", self.id().to_thing()))
+            .await?)
+            .take::<Option<DatabaseResult<bool>>>(0)?
+            .ok_or(ApplicationError::InternalServerError)?;
 
         result.is_ok()
     }
@@ -78,13 +77,12 @@ impl Authorizable for Account {
         permission: &Permission,
         connection: &DatabaseConnection,
     ) -> Result<()> {
-        sql_span!(
-            connection
-                .query("RELATE $account->has->$permission")
-                .bind(("account", self.id()))
-                .bind(("permission", &permission.id))
-                .await?
-        );
+        sql_span!(connection
+            .query("RELATE $account->has->$permission")
+            .bind(("account", self.id().to_thing()))
+            .bind(("permission", permission.to_thing()))
+            .await?
+            .check()?);
 
         Ok(())
     }

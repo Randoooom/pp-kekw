@@ -140,7 +140,7 @@ impl Authenticateable for Account {
                     Err(ApplicationError::Unauthorized)
                 }
             } else {
-                Err(ApplicationError::Forbidden("TOTP is required"))
+                Err(ApplicationError::Forbidden("TOTP is required".to_owned()))
             };
         }
 
@@ -149,7 +149,7 @@ impl Authenticateable for Account {
 
     #[instrument(skip_all)]
     async fn start_session(&self, connection: &DatabaseConnection) -> Result<Session> {
-        Session::init(SessionType::Human(self.id.to_string()), connection).await
+        Session::init(SessionType::Human(self.id.clone()), connection).await
     }
 
     #[instrument(skip_all)]
@@ -203,10 +203,10 @@ impl Authenticateable for Account {
 mod tests {
     use crate::auth::{decrypt, derive_key, encrypt, hash_key, Authenticateable};
     use crate::data::account::Account;
+    use crate::prelude::Id;
     use argon2::password_hash::rand_core::OsRng;
     use argon2::password_hash::SaltString;
     use chrono::{Duration, Local};
-    use surrealdb::sql::Thing;
     use totp_rs::{Algorithm, TOTP};
 
     #[tokio::test]
@@ -216,7 +216,7 @@ mod tests {
         let salt = SaltString::generate(&mut OsRng);
         let hash = hash_key(&derive_key(password, &salt).unwrap());
         let account = Account {
-            id: Thing::from(("account", "")),
+            id: Id::new(("account", "")),
             uuid: None,
             password: hash,
             secret: "".to_string(),
@@ -237,7 +237,7 @@ mod tests {
         let hash = hash_key(&derive_key(password, &salt).unwrap());
 
         let mut account = Account {
-            id: Thing::from(("account", "")),
+            id: Id::new(("account", "")),
             uuid: None,
             password: hash,
             secret: "".to_string(),
@@ -281,7 +281,7 @@ mod tests {
         let password = "password";
 
         let account = Account {
-            id: Thing::from(("account", "")),
+            id: Id::new(("account", "")),
             uuid: None,
             password: "".to_string(),
             secret: "".to_string(),

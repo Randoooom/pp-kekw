@@ -48,7 +48,15 @@ where
 }
 
 impl From<JsonSchemaRejection> for ApplicationError {
-    fn from(_rejection: JsonSchemaRejection) -> Self {
-        Self::BadRequest("invalid request body")
+    fn from(rejection: JsonSchemaRejection) -> Self {
+        let message = match rejection {
+            JsonSchemaRejection::Json(err) => err.to_string(),
+            JsonSchemaRejection::Serde(err) => err.to_string(),
+            JsonSchemaRejection::Schema(err) => {
+                serde_json::to_string(&serde_json::json!({ "schema": err })).unwrap()
+            }
+        };
+
+        Self::BadRequest(message)
     }
 }

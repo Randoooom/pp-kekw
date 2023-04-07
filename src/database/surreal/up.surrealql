@@ -20,3 +20,14 @@ DEFINE TABLE session SCHEMAFULL;
     DEFINE FIELD refresh_token  on session TYPE string ASSERT $value IS NOT NULL;
     DEFINE FIELD refresh_exp    on session TYPE number ASSERT $value IS NOT NULL;
 
+DEFINE TABLE event SCHEMAFULL;
+    DEFINE FIELD name           on event TYPE string        ASSERT $value IS NOT NULL;
+    DEFINE FIELD description    on event TYPE string        ASSERT $value IS NOT NULL;
+    DEFINE FIELD start          on event TYPE datetime      ASSERT $value IS NOT NULL;
+    DEFINE FIELD end            on event TYPE datetime      ASSERT $value IS NOT NULL;
+    DEFINE FIELD created_at     on event TYPE datetime      VALUE $before OR time::now();
+
+DEFINE TABLE news SCHEMAFULL;
+    DEFINE FIELD content        on news TYPE string    ASSERT $value IS NOT NULL;
+    DEFINE FIELD shown          on news TYPE bool      VALUE $value OR FALSE;
+    DEFINE FIELD created_at     on news TYPE datetime  VALUE $before OR time::now();

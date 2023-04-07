@@ -43,7 +43,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate axum_macros;
 
-use crate::prelude::ApplicationState;
+use crate::prelude::{ApplicationState, DatabaseConnection};
 use aide::axum::ApiRouter;
 use aide::openapi::OpenApi;
 use axum::{BoxError, Extension, Router};
@@ -60,9 +60,8 @@ mod state;
 #[cfg(test)]
 mod tests;
 
-pub async fn router() -> Result<Router, BoxError> {
+pub async fn router(connection: DatabaseConnection) -> Result<Router, BoxError> {
     // connect to the database
-    let connection = database::connect().await?;
     let state = ApplicationState::from(connection);
 
     aide::gen::extract_schemas(true);
@@ -76,7 +75,8 @@ pub async fn router() -> Result<Router, BoxError> {
 
 #[tokio::main]
 async fn main() -> Result<(), BoxError> {
-    let router = router().await?;
+    let connection = database::connect().await?;
+    let router = router(connection).await?;
 
     // start the axum server
     let address = SocketAddr::from(([0, 0, 0, 0], 8000));
@@ -90,9 +90,12 @@ async fn main() -> Result<(), BoxError> {
 
 pub mod prelude {
     pub use crate::auth::authz::permission::*;
+    pub use crate::database::id::Id;
+    pub use crate::database::page::{Page, PagingRequest};
     pub use crate::database::DatabaseConnection;
     pub use crate::error::*;
     pub use crate::routes::extractor::Json;
+    pub use crate::routes::{CreationResponse, DeletionResponse};
     pub use crate::state::ApplicationState;
     pub use crate::{require_session, sql_span};
 }

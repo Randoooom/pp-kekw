@@ -27,9 +27,10 @@
 use crate::prelude::*;
 use aide::axum::routing::get_with;
 use aide::axum::{ApiRouter, IntoApiResponse};
-use aide::openapi::OpenApi;
+use aide::openapi::{ApiKeyLocation, OpenApi, SecurityScheme};
 use aide::redoc::Redoc;
 use aide::transform::TransformOpenApi;
+use axum::http::header::AUTHORIZATION;
 use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Extension;
@@ -65,4 +66,13 @@ pub fn transform_api(api: TransformOpenApi) -> TransformOpenApi {
     api.title("PP-Kekw")
         .summary("The better version")
         .description("ADVERTISE HERE PLEASE")
+        .security_scheme(
+            "Session",
+            SecurityScheme::ApiKey {
+                location: ApiKeyLocation::Header,
+                name: AUTHORIZATION.to_string(),
+                description: Some("The id of the session".to_owned()),
+                extensions: Default::default(),
+            },
+        )
 }

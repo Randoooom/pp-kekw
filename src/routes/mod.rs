@@ -30,12 +30,38 @@ use aide::axum::ApiRouter;
 mod account;
 mod auth;
 pub mod docs;
+mod event;
 pub mod extractor;
 mod middleware;
+mod news;
 
 pub fn router(state: ApplicationState) -> ApiRouter {
     ApiRouter::new()
         .nest_api_service("/auth", auth::router(state.clone()))
         .nest_api_service("/account", account::router(state.clone()))
+        .nest_api_service("/event", event::router(state.clone()))
+        .nest_api_service("/news", news::router(state.clone()))
         .with_state(state)
+}
+
+#[derive(Serialize, Debug, Clone, JsonSchema)]
+pub struct DeletionResponse {
+    pub deleted: bool,
+}
+
+impl From<bool> for DeletionResponse {
+    fn from(value: bool) -> Self {
+        Self { deleted: value }
+    }
+}
+
+#[derive(Serialize, Debug, Clone, JsonSchema)]
+pub struct CreationResponse {
+    pub created: bool,
+}
+
+impl From<bool> for CreationResponse {
+    fn from(value: bool) -> Self {
+        Self { created: value }
+    }
 }

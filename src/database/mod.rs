@@ -31,6 +31,9 @@ use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
 use version_compare::{Cmp, Version};
 
+pub mod id;
+pub mod page;
+
 const SURREALDB_ENDPOINT: &str = "SURREALDB_ENDPOINT";
 const SURREALDB_USERNAME: &str = "SURREALDB_USERNAME";
 const SURREALDB_PASSWORD: &str = "SURREALDB_PASSWORD";
@@ -79,6 +82,7 @@ pub async fn connect() -> Result<DatabaseConnection> {
         if #[cfg(test)] {
             let db = nanoid::nanoid!();
             info!("Using database {db}");
+            println!("{:?}", db);
 
             client
                 .use_ns("test")
@@ -117,7 +121,8 @@ pub async fn migrate(
             DEFINE FIELD created_at  on TABLE migration TYPE datetime VALUE time::now();",
         )
         .query("SELECT version, created_at FROM migration ORDER BY created_at DESC LIMIT 1")
-        .await?;
+        .await?
+        .check()?;
     // take the last as response, which contains the last migrated version
     let last = responses.take::<Option<String>>((1, "version"))?;
 
@@ -136,7 +141,8 @@ pub async fn migrate(
                         .query(migration)
                         .query("CREATE migration SET version = $version")
                         .bind(("version", version))
-                        .await?;
+                        .await?
+                        .check()?;
                 }
             }
         }
@@ -145,7 +151,8 @@ pub async fn migrate(
         client
             .query("CREATE migration SET version = $version")
             .bind(("version", current_version))
-            .await?;
+            .await?
+            .check()?;
     }
 
     Ok(())

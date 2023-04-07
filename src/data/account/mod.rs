@@ -26,16 +26,16 @@
 
 use crate::prelude::*;
 use chrono::{DateTime, Utc};
-use surrealdb::sql::Thing;
 
 pub mod create;
 
 #[derive(Getters, Deserialize, Serialize, Clone, Debug)]
 #[cfg_attr(test, derive(PartialEq))]
 #[getset(get = "pub")]
+#[serde(rename_all = "camelCase")]
 pub struct Account {
     /// primary and unique identifier
-    pub id: Thing,
+    pub id: Id,
     /// the uuid of the linked minecraft account
     pub uuid: Option<String>,
     /// the double hashed password
@@ -48,6 +48,7 @@ pub struct Account {
     pub totp: bool,
     /// is locked
     pub locked: bool,
+    #[serde(alias = "created_at")]
     pub created_at: DateTime<Utc>,
 }
 
@@ -74,11 +75,8 @@ impl Account {
     #[instrument(skip(connection))]
     pub async fn from_id(id: &str, connection: &DatabaseConnection) -> Result<Option<Self>> {
         // fetch the account from the database
-        let account = sql_span!(connection
-            .query("SELECT * FROM $account")
-            .bind(("account", id))
-            .await?
-            .take::<Option<Account>>(0)?);
+        let account: Option<Account> =
+            sql_span!(connection.select(&Id::try_from(("account", id))?).await?);
 
         Ok(account)
     }
@@ -88,13 +86,12 @@ impl Account {
     pub async fn link(&mut self, uuid: &str, connection: &DatabaseConnection) -> Result<()> {
         self.uuid = Some(uuid.to_string());
         // update in the database
-        sql_span!(
-            connection
-                .query("UPDATE $account SET uuid = $uuid")
-                .bind(("account", self.id()))
-                .bind(("uuid", uuid))
-                .await?
-        );
+        sql_span!(connection
+            .query("UPDATE $account SET uuid = $uuid")
+            .bind(("account", self.id().to_thing()))
+            .bind(("uuid", uuid))
+            .await?
+            .check()?);
 
         Ok(())
     }

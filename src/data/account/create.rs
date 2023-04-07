@@ -79,13 +79,8 @@ mod tests {
         };
         let account = create.create(connection).await?;
 
-        let fetched = connection
-            .query("SELECT * FROM $account")
-            .bind(("account", account.id()))
-            .await?
-            .take::<Option<Account>>(0)?
-            .unwrap();
-        assert_eq!(account, fetched);
+        let fetched: Option<Account> = connection.select(account.id()).await?;
+        assert_eq!(account, fetched.unwrap());
 
         Ok(())
     }

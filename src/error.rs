@@ -27,15 +27,16 @@
 use crate::prelude::*;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use std::error::Error;
 
 #[derive(Error, Debug, OperationIo)]
 pub enum ApplicationError {
     #[error("Unauthorized")]
     Unauthorized,
     #[error("{0}")]
-    BadRequest(&'static str),
+    BadRequest(String),
     #[error("{0}")]
-    Forbidden(&'static str),
+    Forbidden(String),
     #[error(transparent)]
     HashError(#[from] argon2::password_hash::errors::Error),
     #[error(transparent)]
@@ -44,6 +45,8 @@ pub enum ApplicationError {
     SurrealdbError(#[from] surrealdb::Error),
     #[error("Internal error occurred")]
     InternalServerError,
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
 }
 
 #[derive(Serialize, Debug, JsonSchema)]
@@ -59,6 +62,15 @@ impl From<argon2::Error> for ApplicationError {
 
 pub type Result<T> = std::result::Result<T, ApplicationError>;
 
+macro_rules! log_test_error {
+    ($error:expr) => {
+        #[cfg(test)]
+        {
+            println!("Err: {:?}", $error.to_string());
+        }
+    };
+}
+
 impl IntoResponse for ApplicationError {
     fn into_response(self) -> Response {
         match self {
@@ -67,14 +79,22 @@ impl IntoResponse for ApplicationError {
                 Json(json!({"error": "Unauthorized"})),
             ),
             ApplicationError::BadRequest(error) => {
+                log_test_error!(error);
                 (StatusCode::BAD_REQUEST, Json(json!({ "error": error })))
             }
             ApplicationError::Forbidden(error) => {
+                log_test_error!(error);
                 (StatusCode::FORBIDDEN, Json(json!({ "error": error })))
             }
             _ => {
-                error!("{}", self.to_string());
-                println!("{:?}", self.to_string());
+                error!("Err: {}", self.to_string());
+                error!("Caused: {}", self.source().unwrap());
+
+                #[cfg(test)]
+                {
+                    println!("Err: {:?}", self.to_string());
+                    println!("Caused: {:?}", self.source().unwrap());
+                }
 
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,

@@ -24,6 +24,35 @@
  *
  */
 
-pub mod account;
-pub mod event;
-pub mod news;
+use crate::prelude::*;
+use chrono::{DateTime, Utc};
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, Getters)]
+#[get = "pub"]
+#[serde(rename_all = "camelCase")]
+pub struct News {
+    id: Id,
+    /// the content (supports html -> with automatic xss cleanup)
+    content: String,
+    shown: bool,
+    #[serde(alias = "created_at")]
+    created_at: DateTime<Utc>,
+}
+
+impl News {
+    #[instrument(skip_all)]
+    pub async fn new(content: &str, connection: &DatabaseConnection) -> Result<Self> {
+        // cleanup the content
+        let content = ammonia::clean(content);
+
+        // save into the database
+        let news: News = sql_span!(
+            connection
+                .create("news")
+                .content(&serde_json::json!({ "content": content }))
+                .await?
+        );
+
+        Ok(news)
+    }
+}

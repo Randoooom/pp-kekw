@@ -26,7 +26,13 @@
 
 use crate::prelude::*;
 use chrono::{Duration, Utc};
-use surrealdb::sql::Thing;
+
+const ALPHABET: [char; 62] = [
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+    'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B',
+    'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
+    'V', 'W', 'X', 'Y', 'Z',
+];
 
 /// The length of an issued session in seconds.
 /// Default is 3600(1 hour)
@@ -39,15 +45,15 @@ const REFRESH_LENGTH: i64 = 5400;
 #[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(tag = "type", content = "id")]
 pub enum SessionType {
-    Machine(String),
-    Human(String),
+    Machine(Id),
+    Human(Id),
 }
 
 impl ToString for SessionType {
     fn to_string(&self) -> String {
         match self {
-            SessionType::Human(id) => id.clone(),
-            SessionType::Machine(id) => id.clone(),
+            SessionType::Human(id) => id.to_string(),
+            SessionType::Machine(id) => id.to_string(),
         }
     }
 }
@@ -55,10 +61,10 @@ impl ToString for SessionType {
 /// A session stores all the relevant information needed to authenticate and authorize incoming requests
 /// by their given `sessionId`. All sessions can be refreshed
 #[derive(Clone, Debug, Getters, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct Session {
     /// the session id which will be used to authenticate the requests
-    #[schemars(with = "String")]
-    id: Thing,
+    pub id: Id,
     /// the type of the session target. This can be a machine / api or an human user with it's Account.
     #[get = "pub"]
     target: SessionType,
@@ -69,8 +75,10 @@ pub struct Session {
     #[get = "pub"]
     exp: i64,
     /// token for rereshing the session on the `/auth/refresh` route
+    #[serde(alias = "refresh_token")]
     refresh_token: String,
     /// refresh ends at timestamp (seconds)
+    #[serde(alias = "refresh_exp")]
     refresh_exp: i64,
 }
 
@@ -92,7 +100,8 @@ impl Session {
             connection
                 .query("DELETE FROM session WHERE target = $target")
                 .bind(("target", target.to_string()))
-                .await?,
+                .await?
+                .check()?,
             "end existing sessions"
         );
 
@@ -104,7 +113,12 @@ impl Session {
             refresh_exp: (Utc::now() + Duration::seconds(REFRESH_LENGTH)).timestamp(),
         };
         // save the session into the database
-        let session: Session = sql_span!(connection.create("session").content(&session).await?);
+        let session: Session = sql_span!(
+            connection
+                .create(("session", nanoid::nanoid!(32, &ALPHABET)))
+                .content(&session)
+                .await?
+        );
 
         Ok(session)
     }
@@ -113,7 +127,8 @@ impl Session {
     #[instrument(skip(connection))]
     pub async fn is_session_valid(id: &str, connection: &DatabaseConnection) -> Result<Session> {
         // try to fetch the session out of the database
-        let session: Option<Session> = sql_span!(connection.select(("session", id)).await?);
+        let session: Option<Session> =
+            sql_span!(connection.select(&Id::try_from(("session", id))?).await?);
 
         match session {
             Some(session) => {
@@ -142,11 +157,7 @@ impl Session {
     /// Ends the given session
     #[instrument(skip_all)]
     pub async fn end(&self, connection: &DatabaseConnection) -> Result<()> {
-        sql_span!(
-            connection
-                .delete(("session", self.id.id.to_string()))
-                .await?
-        );
+        sql_span!(connection.delete(&self.id).await?);
 
         Ok(())
     }
@@ -166,12 +177,7 @@ impl Session {
             self.refresh_exp = (Utc::now() + Duration::seconds(REFRESH_LENGTH)).timestamp();
 
             // push the changes into the database
-            sql_span!(
-                connection
-                    .update(("session", &self.id.id.to_string()))
-                    .content(&self)
-                    .await?
-            );
+            sql_span!(connection.update(&self.id).content(&self).await?);
 
             Ok(())
         } else {
@@ -183,11 +189,7 @@ impl Session {
 
     /// Fetch a session by its id.
     pub async fn from_id(id: &str, connection: &DatabaseConnection) -> Result<Option<Self>> {
-        let session = connection
-            .query("SELECT * FROM session WHERE id = $id")
-            .bind(("id", id))
-            .await?
-            .take::<Option<Session>>(0)?;
+        let session: Option<Session> = connection.select(&Id::try_from(("session", id))?).await?;
 
         Ok(session)
     }

@@ -41,16 +41,16 @@ pub fn router(state: ApplicationState) -> ApiRouter {
 async fn signup(
     State(state): State<ApplicationState>,
     Json(data): Json<CreateAccount>,
-) -> Result<StatusCode> {
+) -> Result<(StatusCode, Json<CreationResponse>)> {
     let connection = state.connection();
 
     data.create(connection).await?;
-    Ok(StatusCode::CREATED)
+    Ok((StatusCode::CREATED, Json(CreationResponse::from(true))))
 }
 
 fn signup_docs(op: TransformOperation) -> TransformOperation {
     op.description("SignUp a new account")
-        .response::<201, StatusCode>()
+        .response::<201, Json<CreationResponse>>()
 }
 
 #[cfg(test)]
@@ -67,13 +67,13 @@ mod tests {
             .connector()
             .post("/account/signup")
             .json(&serde_json::json! ({
-                "username": "username",
+                "username": "test",
                 "password": "password"
             }))
             .send()
             .await;
         assert_eq!(StatusCode::CREATED, response.status());
-        assert!(suite.try_login("username", "password", None).await.is_ok());
+        assert!(suite.try_login("test", "password", None).await.is_ok());
 
         Ok(())
     }

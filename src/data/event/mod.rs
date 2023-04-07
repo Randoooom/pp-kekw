@@ -24,6 +24,23 @@
  *
  */
 
-pub mod account;
-pub mod event;
-pub mod news;
+use crate::prelude::*;
+use chrono::{DateTime, Utc};
+
+mod team;
+
+#[derive(Getters, Debug, Clone, Deserialize, Serialize, JsonSchema, PartialEq)]
+#[serde(rename_all = "camelCase")]
+#[get = "pub"]
+pub struct Event {
+    id: Id,
+    /// the name / title for the planned event
+    name: String,
+    description: String,
+    /// the scheduled start of the event
+    start: DateTime<Utc>,
+    /// the scheduled end of the event
+    end: DateTime<Utc>,
+    #[serde(alias = "created_at")]
+    created_at: DateTime<Utc>,
+}
