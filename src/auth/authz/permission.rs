@@ -108,7 +108,7 @@ pub async fn init_permissions(connection: &DatabaseConnection) -> Result<()> {
                 format!("CREATE {};", &permission.id.to_string().replace('.', "")).as_str(),
             )
         });
-    if query.len() > 0 {
+    if !query.is_empty() {
         // execute the query
         connection.query(query.as_str()).await?.check()?;
     }
