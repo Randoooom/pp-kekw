@@ -138,7 +138,9 @@ async fn get_all(
     let connection = state.connection();
 
     Ok(Json(
-        request.execute("SELECT * FROM news", connection).await?,
+        request
+            .execute::<News, &str>("SELECT * FROM news", None, connection)
+            .await?,
     ))
 }
 

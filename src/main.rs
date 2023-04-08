@@ -77,6 +77,8 @@ pub async fn router(connection: DatabaseConnection) -> Result<Router, BoxError> 
 
 #[tokio::main]
 async fn main() -> Result<(), BoxError> {
+    let _ = std::env::var("HCAPTCHA_SECRET").expect("HCAPTCHA_SECRET NOT FOUND");
+
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(tracing_subscriber::fmt::layer())
@@ -105,4 +107,8 @@ pub mod prelude {
     pub use crate::routes::{CreationResponse, DeletionResponse};
     pub use crate::state::ApplicationState;
     pub use crate::{require_session, sql_span};
+
+    lazy_static::lazy_static! {
+        pub static ref HCAPTCHA_SECRET: String = std::env::var("HCAPTCHA_SECRET").expect("HCAPTCHA_SECRET NOT FOUND");
+    }
 }

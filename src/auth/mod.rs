@@ -217,6 +217,7 @@ mod tests {
         let hash = hash_key(&derive_key(password, &salt).unwrap());
         let account = Account {
             id: Id::new(("account", "")),
+            username: "".to_owned(),
             uuid: None,
             password: hash,
             secret: "".to_string(),
@@ -238,6 +239,7 @@ mod tests {
 
         let mut account = Account {
             id: Id::new(("account", "")),
+            username: "".to_owned(),
             uuid: None,
             password: hash,
             secret: "".to_string(),
@@ -282,6 +284,7 @@ mod tests {
 
         let account = Account {
             id: Id::new(("account", "")),
+            username: "".to_owned(),
             uuid: None,
             password: "".to_string(),
             secret: "".to_string(),

@@ -25,18 +25,25 @@
  */
 
 use crate::data::account::create::CreateAccount;
+use crate::data::account::protected::ProtectedAccount;
+use crate::data::account::Account;
 use crate::prelude::*;
-use aide::axum::routing::post_with;
+use aide::axum::routing::{get_with, post_with};
 use aide::axum::ApiRouter;
 use aide::transform::TransformOperation;
 use axum::extract::State;
 use axum::http::StatusCode;
+use axum::Extension;
 
 mod schematic;
 
 pub fn router(state: ApplicationState) -> ApiRouter {
     ApiRouter::new()
         .api_route("/signup", post_with(signup, signup_docs))
+        .api_route(
+            "/me",
+            get_with(get_me, get_me_docs).layer(require_session!(state, DEFAULT)),
+        )
         .nest_api_service("/:account_id/schematic", schematic::router(state.clone()))
         .with_state(state)
 }
@@ -56,9 +63,22 @@ fn signup_docs(op: TransformOperation) -> TransformOperation {
         .response::<201, Json<CreationResponse>>()
 }
 
+/// GET /account/me
+async fn get_me(Extension(account): Extension<Account>) -> Result<Json<ProtectedAccount>> {
+    Ok(Json(ProtectedAccount::from(account)))
+}
+
+fn get_me_docs(op: TransformOperation) -> TransformOperation {
+    op.description("Get authenticated account")
+        .response::<200, Json<ProtectedAccount>>()
+        .security_requirement("Session")
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::data::account::protected::ProtectedAccount;
     use crate::tests::TestSuite;
+    use axum::http::header::AUTHORIZATION;
     use axum::http::StatusCode;
     use axum::BoxError;
 
@@ -77,6 +97,25 @@ mod tests {
             .await;
         assert_eq!(StatusCode::CREATED, response.status());
         assert!(suite.try_login("test", "password", None).await.is_ok());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_me() -> Result<(), BoxError> {
+        let suite = TestSuite::start().await?;
+
+        let session = suite.authenticate("username", "password", None).await;
+        let response = suite
+            .connector()
+            .get("/account/me")
+            .header(AUTHORIZATION, session.as_str())
+            .send()
+            .await;
+        assert_eq!(StatusCode::OK, response.status());
+
+        let fetched = response.json::<ProtectedAccount>().await;
+        assert_eq!(ProtectedAccount::from(suite.account().clone()), fetched);
 
         Ok(())
     }

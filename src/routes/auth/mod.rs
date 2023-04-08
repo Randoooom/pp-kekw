@@ -34,6 +34,8 @@ use aide::transform::TransformOperation;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Extension;
+#[cfg(not(test))]
+use hcaptcha::{HcaptchaCaptcha, HcaptchaClient, HcaptchaRequest};
 
 pub fn router(state: ApplicationState) -> ApiRouter {
     ApiRouter::new()
@@ -54,6 +56,8 @@ pub struct LoginRequest {
     password: String,
     /// the totp token for optional enabled totp authentication
     token: Option<String>,
+    #[cfg(not(test))]
+    hcaptcha: String,
 }
 
 /// POST /auth/login
@@ -63,6 +67,22 @@ async fn login(
 ) -> Result<Json<Session>> {
     let connection = state.connection();
 
+    // verify the hcaptcha token
+    #[cfg(not(test))]
+    {
+        let request = HcaptchaRequest::new(
+            HCAPTCHA_SECRET.as_str(),
+            HcaptchaCaptcha::new(data.hcaptcha.as_str())
+                .map_err(|_| ApplicationError::Unauthorized)?,
+        )
+        .map_err(|_| ApplicationError::Unauthorized)?;
+        let client = HcaptchaClient::new();
+
+        client
+            .verify_client_response(request)
+            .await
+            .map_err(|_| ApplicationError::Unauthorized)?;
+    };
     // fetch the requested account
     match Account::from_username(data.username.as_str(), connection).await? {
         Some(account) => {

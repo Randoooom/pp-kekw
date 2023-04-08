@@ -109,7 +109,10 @@ async fn get_all<'a>(
 ) -> Result<Json<Page<Event>>> {
     let connection = state.connection();
 
-    Ok(Json(data.execute("SELECT * FROM event", connection).await?))
+    Ok(Json(
+        data.execute::<Event, &str>("SELECT * FROM event", None, connection)
+            .await?,
+    ))
 }
 
 fn get_all_docs(op: TransformOperation) -> TransformOperation {

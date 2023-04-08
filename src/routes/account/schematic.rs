@@ -32,7 +32,7 @@ use aide::axum::routing::{get_with, post_with};
 use aide::axum::ApiRouter;
 use aide::transform::TransformOperation;
 use axum::body::StreamBody;
-use axum::extract::{BodyStream, Path, State};
+use axum::extract::{BodyStream, Path, Query, State};
 use axum::http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::Extension;
@@ -44,6 +44,11 @@ use tokio_util::io::{ReaderStream, StreamReader};
 pub fn router(state: ApplicationState) -> ApiRouter {
     ApiRouter::new()
         .api_route(
+            "/",
+            get_with(get_schematic_entry_page, get_schematic_entry_page_docs)
+                .layer(require_session!(state, DEFAULT)),
+        )
+        .api_route(
             "/upload/:schematic_name",
             post_with(upload, upload_docs).layer(require_session!(state, DEFAULT)),
         )
@@ -54,6 +59,44 @@ pub fn router(state: ApplicationState) -> ApiRouter {
                 .layer(require_session!(state, DEFAULT)),
         )
         .with_state(state)
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+pub struct SchematicEntry {
+    id: Id,
+    name: String,
+    owner: String,
+}
+
+/// GET /account/:account_id/schematic
+async fn get_schematic_entry_page(
+    State(state): State<ApplicationState>,
+    Extension(account): Extension<Account>,
+    Query(request): Query<PagingRequest>,
+) -> Result<Json<Page<SchematicEntry>>> {
+    let connection = state.connection();
+
+    match account.uuid() {
+        Some(uuid) => {
+            // select a page of all accessible entries
+            let entries = request
+                .execute::<SchematicEntry, _>(
+                    "SELECT id, name, owner FROM schematic WHERE owner = $uuid OR ->added->(account WHERE uuid = $uuid)",
+                    Some(&[("uuid", uuid)]),
+                    connection,
+                )
+                .await?;
+
+            Ok(Json(entries))
+        }
+        None => Err(ApplicationError::Unauthorized),
+    }
+}
+
+fn get_schematic_entry_page_docs(op: TransformOperation) -> TransformOperation {
+    op.description("Get a page of schematic entries")
+        .response::<200, Json<Page<SchematicEntry>>>()
+        .response::<401, Json<ApplicationErrorResponse>>()
 }
 
 /// POST /account/:account_id/schematic/:schematic_name

@@ -28,6 +28,7 @@ use crate::prelude::*;
 use chrono::{DateTime, Utc};
 
 pub mod create;
+pub mod protected;
 
 #[derive(Getters, Deserialize, Serialize, Clone, Debug)]
 #[cfg_attr(test, derive(PartialEq))]
@@ -36,6 +37,8 @@ pub mod create;
 pub struct Account {
     /// primary and unique identifier
     pub id: Id,
+    /// the username
+    pub username: String,
     /// the uuid of the linked minecraft account
     pub uuid: Option<String>,
     /// the double hashed password

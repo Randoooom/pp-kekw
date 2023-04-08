@@ -63,12 +63,19 @@ fn default_page_size() -> u64 {
 
 impl PagingRequest {
     #[instrument(skip_all)]
-    pub async fn execute<T>(self, query: &str, connection: &DatabaseConnection) -> Result<Page<T>>
+    pub async fn execute<T, P>(
+        self,
+        query: &str,
+        bindings: Option<&[P]>,
+        connection: &DatabaseConnection,
+    ) -> Result<Page<T>>
     where
         T: DeserializeOwned + JsonSchema + Serialize,
+        P: Serialize,
     {
-        Page::<T>::select::<T>(
+        Page::<T>::select::<T, P>(
             query,
+            bindings,
             self.page_size,
             (self.page - 1) * self.page_size,
             connection,
@@ -81,22 +88,31 @@ impl<T> Page<T>
 where
     T: DeserializeOwned + JsonSchema + Serialize,
 {
-    pub async fn select<R>(
+    pub async fn select<R, P>(
         query: &str,
+        bindings: Option<&[P]>,
         page_size: u64,
         offset: u64,
         connection: &DatabaseConnection,
     ) -> Result<Page<R>>
     where
         R: Serialize + DeserializeOwned + JsonSchema,
+        P: Serialize,
     {
         // build the count query
         let count = format!("SELECT * FROM count(({query}))");
         // build the paging query
         let query = format!("{query} LIMIT {page_size} START {offset}");
+        let mut request = connection.query(count).query(query);
+        // apply the bindings
+        if let Some(bindings) = bindings {
+            for binding in bindings.iter() {
+                request = request.bind(binding)
+            }
+        }
 
         // execute the queries
-        let mut response = sql_span!(connection.query(count).query(query).await?.check()?);
+        let mut response = sql_span!(request.await?.check()?);
         // get the total count of entries
         let total = response
             .take::<Option<u64>>(0)?
@@ -134,7 +150,9 @@ mod tests {
         }
         query.await?.check()?;
 
-        let page = Page::<Test>::select::<Test>("SELECT * FROM test", 10, 5, &connection).await?;
+        let page =
+            Page::<Test>::select::<Test, &str>("SELECT * FROM test", None, 10, 5, &connection)
+                .await?;
         assert_eq!(25u64, page.total);
         assert_eq!(15u64, page.next_page_offset);
         assert_eq!(3u64, page.pages);
