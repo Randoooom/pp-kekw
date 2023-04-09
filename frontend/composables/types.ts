@@ -24,39 +24,10 @@
  *
  */
 
-use crate::prelude::*;
-use chrono::{DateTime, Utc};
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, Getters, Setters)]
-#[get = "pub"]
-#[serde(rename_all = "camelCase")]
-pub struct News {
-    id: Id,
-    /// the content (supports html -> with automatic xss cleanup)
-    content: String,
-    shown: bool,
-    /// the file extension of the optional image. This has to be `Some` otherwise `shown` will be
-    /// locked at `false`.
-    #[set = "pub"]
-    extension: Option<String>,
-    #[serde(alias = "created_at")]
-    created_at: DateTime<Utc>,
-}
-
-impl News {
-    #[instrument(skip_all)]
-    pub async fn new(content: &str, connection: &DatabaseConnection) -> Result<Self> {
-        // cleanup the content
-        let content = ammonia::clean(content);
-
-        // save into the database
-        let news: News = sql_span!(
-            connection
-                .create("news")
-                .content(&serde_json::json!({ "content": content }))
-                .await?
-        );
-
-        Ok(news)
-    }
+export interface News {
+    id: string;
+    content: string;
+    shown: boolean;
+    extension?: string;
+    created_at: Date;
 }

@@ -1,0 +1,42 @@
+{
+  "form": {
+    "password": {
+      "veryWeak": "very weak",
+      "weak": "weak",
+      "medium": "medium",
+      "strong": "strong",
+      "veryStrong": "very strong"
+    }
+  },
+  "emit": {
+    "button": "Okay"
+  },
+  "auth": {
+    "login": {
+      "success": "Login successful",
+      "failed": "Login failed"
+    },
+    "logout": {
+      "success": "Logout successful"
+    }
+  },
+  "fetch": {
+    "unauthorized": "Unauthorized",
+    "failed": "Error occurred while processing your request"
+  },
+  "nav": {
+    "about": "About us",
+    "events": "Events"
+  },
+  "about": {
+    "community": {
+      "title": "The community"
+    },
+    "server": {
+      "title": "Our server"
+    },
+    "forum": {
+      "title": "Exchange"
+    }
+  }
+}

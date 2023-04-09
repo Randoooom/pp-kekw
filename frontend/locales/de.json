@@ -1,0 +1,46 @@
+{
+  "form": {
+    "password": {
+      "veryWeak": "sehr schwach",
+      "weak": "schwach",
+      "medium": "medium",
+      "strong": "stark",
+      "veryStrong": "sehr stark"
+    }
+  },
+  "emit": {
+    "button": "Okay"
+  },
+  "auth": {
+    "login": {
+      "success": "Erfolgreich eingeloggt",
+      "failed": "Login fehlerhaft"
+    },
+    "logout": {
+      "success": "Erfolgreich ausgeloggt"
+    }
+  },
+  "fetch": {
+    "unauthorized": "Unzureichende Berechtigungen",
+    "failed": "Es ist ein Fehler beim Verarbeiten deiner Anfrage aufgetreten"
+  },
+  "nav": {
+    "about": "Über uns",
+    "events": "Events"
+  },
+  "about": {
+    "community": {
+      "title": "Die Community",
+      "content": "Wir sind eine Spiele-Community, welche sich auf den Bau und den kompetitiven Kampf mit WarGears in Minecraft spezialisiert hat! Unser Team steht dir bei Fragen stets zur Seite."
+    },
+    "server": {
+      "title": "Der Server",
+      "content": "Auf unseren Servern kannst du WarGears bauen, testen und anschließend jederzeit vollautomatisch gegen andere Spieler kämpfen. Dafür stellen wir dir eine Vielzahl an Hilfsmitteln für den Entwicklungsprozess bereit."
+    },
+    "forum": {
+      "title": "Das Forum",
+      "content": "In unserem Forum gibt es neben Ankündigungen, Rangbewerbungen und Entbannungsanträgen auch die Möglichkeit, selbst Dinge anzusprechen, Fragen zu stellen oder Kontakt mit Mitgliedern des Serverteams aufzunehmen.",
+      "button": "Zum Forum"
+    }
+  }
+}

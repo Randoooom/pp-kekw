@@ -29,10 +29,7 @@ import FetchWrapper, {ApiError} from "~/composables/fetch";
 import {FetchResponse} from "ohmyfetch";
 import {navigateTo, useI18n, useRoute, useRouter} from "#imports";
 import {localeRoute} from "vue-i18n-routing";
-import {useEmitter} from "~/plugins/emitter";
-
-const emitter = useEmitter();
-const {t} = useI18n();
+import {useEmitter} from "~/stores/emitter";
 
 interface Session {
     exp: number;
@@ -136,7 +133,8 @@ export const useAuthStore = defineStore("auth", {
                             started: new Date(),
                         });
 
-                        emitter.emitSuccess(t("auth.login.success"));
+                        const { t } = useI18n()
+                        useEmitter().emitSuccess(t("auth.login.success"));
 
                         // fetch the account
                         this.fetchAccount();
@@ -209,7 +207,8 @@ export const useAuthStore = defineStore("auth", {
                 started: undefined,
                 refreshToken: undefined,
             });
-            emitter.emitSuccess(t("auth.logout.success"));
+            const { t } = useI18n()
+            useEmitter().emitSuccess(t("auth.logout.success"));
             await useRouter().push(localeRoute("/")?.path!);
         },
         async fetchAccount() {

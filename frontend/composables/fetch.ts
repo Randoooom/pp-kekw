@@ -25,16 +25,11 @@
  */
 
 import { ofetch, FetchContext, FetchOptions, FetchResponse } from "ofetch";
-import { emitSnackbar } from "~/composables/emitter";
 import { useAuthStore } from "~/stores/auth";
 import { useRuntimeConfig } from "#app";
 import { computed } from "vue";
-import {useEmitter} from "~/plugins/emitter";
+import {useEmitter} from "~/stores/emitter";
 import {useI18n} from "vue-i18n";
-
-const { t } = useI18n()
-const emitter = useEmitter();
-const auth = useAuthStore();
 
 export interface Page<T> {
     data: T[]
@@ -174,10 +169,10 @@ export default class {
         // we need to add the `Authorization` Header including the Bearer Token
         // on each request, if a valid session is currently active
         // Here we will access the `AuthStore` and parse the sessionId, if needed
-        if (auth.isLoggedIn()) {
+        if (useAuthStore().isLoggedIn()) {
             // append the header
             if (!options.headers) options.headers = {};
-            options.headers["Authorization"] = `Bearer ${auth.sessionId}`;
+            options.headers["Authorization"] = `Bearer ${useAuthStore().sessionId}`;
         }
 
         return ofetch
@@ -185,12 +180,13 @@ export default class {
             .then((response) => response)
             .catch((context: FetchContext<ApiError>) => {
                 const response = context.response;
+                const { t } = useI18n()
 
                 // handle the 500 internal server error globally here
                 if (response.status !== 401 && response.status !== 403)
-                    emitter.emitError(t("fetch.failed"));
+                    useEmitter().emitError(t("fetch.failed"));
                 else if (response.status === 401)
-                    emitter.emitError(t("fetch.unauthorized"))
+                    useEmitter().emitError(t("fetch.unauthorized"))
 
                 return Promise.reject(response);
             });

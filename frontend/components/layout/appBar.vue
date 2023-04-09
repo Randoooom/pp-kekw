@@ -31,23 +31,23 @@
         <v-app-bar-nav-icon v-if="isXs"/>
 
         <v-app-bar-title class="d-flex align-center justify-start">
-          <NuxtLink :to="localePath('/')" class="text-white font-intro-inline">
-            MYPLAYPLANET.NET
+          <NuxtLink :to="localePath('/')" class="font-intro-inline text-white" id="home">
+            <span :class="myClass">MY</span>PLAYPLANET.NET
           </NuxtLink>
         </v-app-bar-title>
 
         <v-spacer v-if="!isXs"/>
 
-        <v-btn-toggle v-if="!isXs" v-model="route" color="primary" variant="plain">
-          <v-btn key="about" >
-            <NuxtLink :to="localePath('/about')">
-              &Uuml;ber uns
+        <v-btn-toggle v-if="!isXs" v-model="route" selected-class="text-accent">
+          <v-btn>
+            <NuxtLink to="#about">
+              {{ $t("nav.about") }}
             </NuxtLink>
           </v-btn>
 
-          <v-btn key="events">
+          <v-btn>
             <NuxtLink :to="localePath('/events')">
-              Events
+              {{ $t("nav.events") }}
             </NuxtLink>
           </v-btn>
         </v-btn-toggle>
@@ -61,17 +61,28 @@ import {computed, useRoute} from "#imports";
 
 const route = computed({
   get: () => {
-    const route = useRoute().path.toLowerCase();
+    const route = useRoute().fullPath.toLowerCase();
 
-    if (route.includes("/about")) return "about";
-    if (route.includes("/events")) return "events";
-    return "home";
+    if (route.includes("#about")) return 0;
+    if (route.includes("/events")) return 1;
+    return -1;
   },
-  set: (_value: string) => {
+  set: (_value: number) => {
   }
 });
+
+const myClass = computed(() => {
+  let accent = false;
+  if (route.value === -1) accent = true;
+
+  return {
+    "text-accent": accent,
+    "text-white": !accent,
+  }
+})
 </script>
 
 <style lang="sass" scoped>
-
+#home
+  font-size: 27px
 </style>

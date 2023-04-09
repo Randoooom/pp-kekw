@@ -12,6 +12,7 @@ serde = { version = "1.0.159", features = ["derive"] }
 tokio = { version = "1.27.0", features = ["full"] }
 tokio-util = { version = "0.7.7", features = ["io"] }
 totp-rs = { version = "5.0.0", features = ["qr", "gen_secret"] }
+tower-http = { version = "0.4.0", features = ["fs", "tracing", "cors"] }
 tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
 
 ammonia = "3.3.0"

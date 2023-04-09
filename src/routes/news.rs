@@ -26,7 +26,7 @@
 
 use crate::data::news::News;
 use crate::prelude::*;
-use aide::axum::routing::{delete_with, get_with, post_with};
+use aide::axum::routing::{delete_with, get_with, post_with, put_with};
 use aide::axum::ApiRouter;
 use aide::transform::TransformOperation;
 use axum::extract::{BodyStream, Path, Query, State};
@@ -46,9 +46,11 @@ pub fn router(state: ApplicationState) -> ApiRouter {
         )
         .api_route(
             "/:news_id",
-            post_with(upload_image, upload_image_docs)
-                .put_with(update_news, update_docs)
-                .layer(require_session!(state, NEWS_UPDATE)),
+            put_with(update_news, update_docs).layer(require_session!(state, NEWS_UPDATE)),
+        )
+        .api_route(
+            "/:news_id/:file_extension",
+            post_with(upload_image, upload_image_docs).layer(require_session!(state, NEWS_UPDATE)),
         )
         .api_route("/shown", get_with(get_shown, get_shown_docs))
         .api_route("/:news_id", get_with(get, get_docs))
@@ -88,10 +90,10 @@ fn create_docs(op: TransformOperation) -> TransformOperation {
         .security_requirement_scopes("Session", vec![NEWS_CREATE.id.to_string()])
 }
 
-/// POST /news/:news_id
+/// POST /news/:news_id/:file_extension
 async fn upload_image(
     State(state): State<ApplicationState>,
-    Path(news_id): Path<String>,
+    Path((news_id, file_extension)): Path<(String, String)>,
     body: BodyStream,
 ) -> Result<Json<CreationResponse>> {
     let connection = state.connection();
@@ -103,7 +105,7 @@ async fn upload_image(
             .await?
     );
     match news {
-        Some(_) => {
+        Some(mut news) => {
             let stream_reader = StreamReader::new(
                 body.map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error)),
             );
@@ -112,10 +114,14 @@ async fn upload_image(
             // create the file
             let path = std::path::Path::new(CDN_DIR).join("news");
             tokio::fs::create_dir_all(&path).await?;
-            let path = path.join(news_id);
+            let path = path.join(news_id).with_extension(file_extension.as_str());
             let mut file = BufWriter::new(File::create(path).await?);
             // write the body stream to the file
             tokio::io::copy(&mut stream_reader, &mut file).await?;
+
+            // save the new file extension
+            news.set_extension(Some(file_extension));
+            connection.update(news.id()).content(news).await?;
 
             Ok(Json(CreationResponse::from(true)))
         }
@@ -155,7 +161,7 @@ async fn get_shown(State(state): State<ApplicationState>) -> Result<Json<Vec<New
     let connection = state.connection();
 
     let news = sql_span!(connection
-        .query("SELECT * FROM NEWS where shown = true")
+        .query("SELECT * FROM news where shown = true")
         .await?
         .take::<Vec<News>>(0)?);
     Ok(Json(news))
@@ -196,6 +202,12 @@ async fn update_news(
     Json(data): Json<News>,
 ) -> Result<Json<News>> {
     let connection = state.connection();
+
+    if data.extension().is_none() && *data.shown() {
+        return Err(ApplicationError::BadRequest(
+            "extension has to be set in order to shown news".to_owned(),
+        ));
+    };
 
     let news: News = sql_span!(connection
         .query("UPDATE $news CONTENT $content")

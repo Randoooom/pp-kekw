@@ -46,9 +46,13 @@ extern crate axum_macros;
 use crate::prelude::{ApplicationState, DatabaseConnection};
 use aide::axum::ApiRouter;
 use aide::openapi::OpenApi;
+use axum::http::{header, Method};
+use axum::routing::get_service;
 use axum::{BoxError, Extension, Router};
 use std::net::SocketAddr;
 use std::sync::Arc;
+use tower_http::cors::CorsLayer;
+use tower_http::services::ServeDir;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
@@ -67,11 +71,27 @@ pub async fn router(connection: DatabaseConnection) -> Result<Router, BoxError> 
     let state = ApplicationState::from(connection);
 
     aide::gen::extract_schemas(true);
+    let cdn = ServeDir::new(".");
     let mut api = OpenApi::default();
+
     Ok(ApiRouter::new()
         .nest_api_service("/docs", routes::docs::router(state.clone()))
         .nest_api_service("/", routes::router(state))
         .finish_api_with(&mut api, routes::docs::transform_api)
+        .route("/cdn/*name", get_service(cdn))
+        .layer(
+            CorsLayer::new()
+                .allow_origin([std::env::var("ROOT").unwrap().parse().unwrap()])
+                .allow_methods(vec![
+                    Method::GET,
+                    Method::POST,
+                    Method::PUT,
+                    Method::DELETE,
+                    Method::HEAD,
+                    Method::OPTIONS,
+                ])
+                .allow_headers(vec![header::AUTHORIZATION, header::CONTENT_TYPE]),
+        )
         .layer(Extension(Arc::new(api))))
 }
 

@@ -21,70 +21,18 @@ export default defineNuxtConfig({
     build: {
         transpile: ["vuetify"],
     },
-    buildModules: ["@pinia/nuxt"],
-    modules: ["@nuxtjs/i18n"],
+    modules: ["@nuxtjs/i18n", "@pinia/nuxt"],
     i18n: {
-        locales: ["de", "en"],
+        langDir: "./locales/",
+        lazy: true,
+        locales: [
+            { code: "de", iso: "de-DE", file: "de.json" },
+            { code: "en", iso: "en-US", file: "en.json" },
+        ],
         defaultLocale: "de",
         vueI18n: {
             legacy: false,
             fallbackLocale: "de",
-            messages: {
-                de: {
-                    form: {
-                        password: {
-                            veryWeak: "sehr schwach",
-                            weak: "schwach",
-                            medium: "medium",
-                            strong: "stark",
-                            veryStrong: "sehr stark"
-                        }
-                    },
-                    emit: {
-                        button: "Okay"
-                    },
-                    auth: {
-                        login: {
-                            success: "Erfolgreich eingeloggt",
-                            failed: "Login fehlerhaft"
-                        },
-                        logout: {
-                            success: "Erfolgreich ausgeloggt"
-                        }
-                    },
-                    fetch: {
-                        unauthorized: "Unzureichende Berechtigungen",
-                        failed: "Es ist ein Fehler beim Verarbeiten deiner Anfrage aufgetraten"
-                    }
-                },
-                en: {
-                    form: {
-                        password: {
-                            veryWeak: "very weak",
-                            weak: "weak",
-                            medium: "medium",
-                            strong: "strong",
-                            veryStrong: "very strong"
-                        }
-                    },
-                    emit: {
-                        button: "Okay"
-                    },
-                    auth: {
-                        login: {
-                            success: "Login successful",
-                            failed: "Login failed"
-                        },
-                        logout: {
-                            success: "Logout successful"
-                        }
-                    },
-                    fetch: {
-                        unauthorized: "Unauthorized",
-                        failed: "Error occurred while processing your request"
-                    }
-                }
-            }
         }
     },
     runtimeConfig: {

@@ -34,7 +34,7 @@ use aide::transform::TransformOperation;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Extension;
-#[cfg(not(test))]
+#[cfg(not(debug_assertions))]
 use hcaptcha::{HcaptchaCaptcha, HcaptchaClient, HcaptchaRequest};
 
 pub fn router(state: ApplicationState) -> ApiRouter {
@@ -56,7 +56,7 @@ pub struct LoginRequest {
     password: String,
     /// the totp token for optional enabled totp authentication
     token: Option<String>,
-    #[cfg(not(test))]
+    #[cfg(not(debug_assertions))]
     hcaptcha: String,
 }
 
@@ -68,7 +68,7 @@ async fn login(
     let connection = state.connection();
 
     // verify the hcaptcha token
-    #[cfg(not(test))]
+    #[cfg(not(debug_assertions))]
     {
         let request = HcaptchaRequest::new(
             HCAPTCHA_SECRET.as_str(),
