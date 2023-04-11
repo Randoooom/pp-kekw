@@ -157,7 +157,7 @@ impl Session {
     /// Ends the given session
     #[instrument(skip_all)]
     pub async fn end(&self, connection: &DatabaseConnection) -> Result<()> {
-        sql_span!(connection.delete(&self.id).await?);
+        let _: Session = sql_span!(connection.delete(&self.id).await?);
 
         Ok(())
     }

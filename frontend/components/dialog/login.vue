@@ -28,18 +28,18 @@
   <FormDialog :title="$t('auth.login.title')">
     <template v-if="!totpNeeded">
       <v-col cols="12">
-        <v-text-field v-model="username" :rules="[required()]" color="green" :label="$t('auth.username')"
+        <v-text-field v-model="username" :rules="[required()]" color="white" :label="$t('auth.username')"
                       type="text"/>
       </v-col>
 
       <v-col cols="12">
-        <FormPasswordInput v-model="password" color="green" :label="$t('auth.password')" @keyup.enter="login"/>
+        <FormPasswordInput v-model="password" color="white" :label="$t('auth.password')" @keyup.enter="login"/>
       </v-col>
     </template>
 
     <v-col v-else cols="12">
       <!-- `v-otp-input` does not exist currently -->
-      <v-text-field v-model="token" :rules="[required()]" color="green" :label="$t('auth.2fa')" type="text"
+      <v-text-field v-model="token" :rules="[required()]" color="white" :label="$t('auth.2fa')" type="text"
                     @keyup.enter="login"/>
     </v-col>
 
@@ -50,7 +50,7 @@
 
       <v-spacer/>
 
-      <v-btn :disabled="disabled(username, password)" :loading="loading" color="green" variant="text" @click="login">
+      <v-btn :disabled="disabled(username, password)" :loading="loading" color="green-darken-3" variant="text" @click="login">
         {{ $t("auth.login.execute") }}
       </v-btn>
     </template>

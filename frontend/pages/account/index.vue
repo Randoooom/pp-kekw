@@ -44,23 +44,23 @@
         </v-tab>
 
         <v-tab value="security">
-          <v-icon start icon="mdi-shield-lock-outline" />
+          <v-icon start icon="mdi-shield-lock-outline"/>
           {{ $t("dashboard.security") }}
         </v-tab>
 
         <v-tab value="schematics">
-          <v-icon start icon="mdi-cube-outline" />
+          <v-icon start icon="mdi-cube-outline"/>
           {{ $t("dashboard.schematics") }}
         </v-tab>
       </v-tabs>
 
       <v-window v-model="tab" class="mt-5" style="width: 100%">
         <v-window-item value="general">
-          <DashboardAccountGeneral />
+          <DashboardAccountGeneral/>
         </v-window-item>
 
         <v-window-item value="security">
-          <DashboardAccountSecurity />
+          <DashboardAccountSecurity/>
         </v-window-item>
       </v-window>
     </div>

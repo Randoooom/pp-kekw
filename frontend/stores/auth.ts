@@ -26,8 +26,7 @@
 
 import {defineStore} from "pinia";
 import FetchWrapper, {ApiError} from "~/composables/fetch";
-import {FetchResponse} from "ohmyfetch";
-import {navigateTo, useRoute, useRouter} from "#imports";
+import {navigateTo, useRoute} from "#imports";
 import {localeRoute} from "vue-i18n-routing";
 
 interface Session {
@@ -207,7 +206,6 @@ export const useAuthStore = defineStore("auth", {
                 refreshToken: undefined,
                 loggedIn: false
             });
-            await useRouter().push(localeRoute("/")?.path!);
         },
         async fetchAccount() {
             // only allow loggedIn session to do that action

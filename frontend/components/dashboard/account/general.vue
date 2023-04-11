@@ -33,16 +33,24 @@
         </v-col>
       </v-row>
     </v-card-text>
+
+    <v-card-actions>
+      <v-spacer/>
+      <v-btn variant="text" color="accent" @click="logout">
+        Ausloggen
+      </v-btn>
+    </v-card-actions>
   </v-card>
 </template>
 
 <script lang="ts" setup>
 import {useAuthStore} from "~/stores/auth";
 import {required} from "~/composables/form";
-import {computed, ref, useI18n, watch} from "#imports";
+import {computed, ref, useI18n, useRouter, watch} from "#imports";
 import _ from "lodash"
 import {useEmitter} from "~/stores/emitter";
 import Fetch from "~/composables/fetch"
+import {localePath} from "vue-i18n-routing";
 
 const emitter = useEmitter();
 const {t} = useI18n();
@@ -72,5 +80,23 @@ async function updateUsername() {
       username: username.value
     }
   }).then(() => useAuthStore().fetchAccount())
+}
+
+/**
+ * logout
+ */
+async function logout() {
+  await useAuthStore().logout()
+      .then(async () => {
+        useEmitter().emit({
+          icon: "mdi-check",
+          color: "success",
+          content: t("auth.logout.success"),
+          callback: async () => useEmitter().clear(),
+          buttonText: t("emit.button")
+        })
+
+        await useRouter().push("/")
+      })
 }
 </script>
