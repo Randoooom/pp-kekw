@@ -28,6 +28,7 @@ import {defineStore} from "pinia";
 import FetchWrapper, {ApiError} from "~/composables/fetch";
 import {navigateTo, useRoute} from "#imports";
 import {localeRoute} from "vue-i18n-routing";
+import {FetchResponse} from "ofetch";
 
 interface Session {
     exp: number;
@@ -141,7 +142,7 @@ export const useAuthStore = defineStore("auth", {
                         // handle totp required
                         if (
                             response.status === 403 &&
-                            response._data.error === "totp needed"
+                            response._data.error === "TOTP is required"
                         ) {
                             reject(
                                 new AuthenticationError(AuthenticationErrorType.TotpNeeded)

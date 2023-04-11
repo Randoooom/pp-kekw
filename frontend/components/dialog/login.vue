@@ -66,7 +66,7 @@ import {localePath} from "vue-i18n-routing";
 
 const username = ref("");
 const password = ref("");
-const token = ref("");
+const token = ref(undefined as string);
 const loading = ref(false);
 const totpNeeded = ref(false);
 

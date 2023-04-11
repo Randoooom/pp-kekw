@@ -69,7 +69,7 @@
           </v-col>
 
           <v-col cols="12">
-            <v-btn v-if="!account.totp" variant="tonal" color="green" block>
+            <v-btn v-if="!account.totp" @click="openTotpDialog(true)" variant="tonal" color="green" block>
               {{ $t("form.activate") }}
             </v-btn>
           </v-col>
@@ -83,7 +83,7 @@
           </v-col>
 
           <v-col cols="12">
-            <v-btn variant="tonal" color="error" block>
+            <v-btn @click="openTotpDialog(false)" variant="tonal" color="error" block>
               {{ $t("form.deactivate") }}
             </v-btn>
           </v-col>
@@ -96,7 +96,7 @@
 <script lang="ts" setup>
 import {useAuthStore} from "~/stores/auth";
 import Fetch from "~/composables/fetch";
-import {computed, useI18n} from "#imports";
+import {computed, openTotpDialog, useI18n} from "#imports";
 import {useEmitter} from "~/stores/emitter";
 
 const account = useAuthStore().account!;

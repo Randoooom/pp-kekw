@@ -64,9 +64,9 @@ async fn get_qr(
     // try to decode the secret
     let secret = account.read_secret(data.password.as_str())?;
     let totp = TOTP::new(
-        Algorithm::SHA256,
+        Algorithm::SHA1,
         6,
-        0,
+        1,
         30,
         secret.as_bytes().to_vec(),
         Some("MyPlayPlanet".to_owned()),

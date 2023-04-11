@@ -134,9 +134,9 @@ impl Authenticateable for Account {
         if self.totp {
             return if let Some(token) = token {
                 if TOTP::new(
-                    Algorithm::SHA256,
+                    Algorithm::SHA1,
                     6,
-                    0,
+                    1,
                     30,
                     self.read_secret(password)?.as_bytes().to_vec(),
                     None,
@@ -295,9 +295,9 @@ mod tests {
         };
         account.regenerate_secret(password).unwrap();
         let totp = TOTP::new(
-            Algorithm::SHA256,
+            Algorithm::SHA1,
             6,
-            0,
+            1,
             30,
             account.read_secret(password).unwrap().as_bytes().to_vec(),
             None,

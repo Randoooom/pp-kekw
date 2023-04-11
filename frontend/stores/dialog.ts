@@ -28,7 +28,8 @@ import {defineStore} from "pinia";
 import {nanoid} from "nanoid";
 
 export enum DialogType {
-    LOGIN = 0
+    LOGIN = 0,
+    TOTP = 1,
 }
 
 export interface CreateDialog {

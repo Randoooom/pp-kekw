@@ -11,7 +11,8 @@
     "save": "Speichern",
     "changed": "Du hast ungespeicherte Modifikationen!",
     "activate": "Aktivieren",
-    "deactivate": "Deaktivieren"
+    "deactivate": "Deaktivieren",
+    "confirm": "Bestätigen"
   },
   "emit": {
     "button": "Okay"
@@ -32,6 +33,7 @@
     "newPassword": "Neues Passwort",
     "confirmNewPassword": "Neues Passwort erneut eingeben",
     "2fa": "2-Faktor-Authentifizierung",
+    "passwordRequired": "Gebe dein aktuelles Passwort ein um fortzufahren",
     "passwordChange": {
       "success": "Das Passwort wurde erfolgreich gewechselt",
       "error": "Es ist ein Fehler aufgetreten, bitte validiere deine Angaben!"
@@ -68,6 +70,11 @@
     "schematics": "Schematics",
     "changePassword": "Neues Passwort setzen",
     "2faActive": "Die 2-Faktor-Authentifizierung ist aktiv",
-    "2faDisabled": "Aktiviere die 2-Faktor-Authentifizierung um mehr Sicherheit zu erlangen"
+    "2faDisabled": "Aktiviere die 2-Faktor-Authentifizierung um mehr Sicherheit zu erlangen",
+    "2fa": {
+      "scan": "Scanne den folgenden QrCode und gebe den dir generierten TOTP ein",
+      "activated": "Die 2-Faktor-Authentifizierung wurde aktiviert",
+      "deactivated": "Die 2-Faktor-Authentifizierung wurde deaktiviert"
+    }
   }
 }

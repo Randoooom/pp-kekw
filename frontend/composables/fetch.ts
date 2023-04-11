@@ -180,13 +180,14 @@ export default class {
             .then((response) => response)
             .catch((context: FetchContext<ApiError>) => {
                 const response = context.response;
-                const { t } = useI18n()
-
-                // handle the 500 internal server error globally here
-                if (response.status !== 401 && response.status !== 403)
-                    useEmitter().emitError(t("fetch.failed"));
-                else if (response.status === 401)
-                    useEmitter().emitError(t("fetch.unauthorized"))
+                // TODO
+                // const { t } = useI18n()
+                //
+                // // handle the 500 internal server error globally here
+                // if (response.status !== 401 && response.status !== 403)
+                //     useEmitter().emitError(t("fetch.failed"));
+                // else if (response.status === 401)
+                //     useEmitter().emitError(t("fetch.unauthorized"))
 
                 return Promise.reject(response);
             });

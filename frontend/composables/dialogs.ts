@@ -26,8 +26,15 @@
 
 import {DialogType, useDialogStore} from "~/stores/dialog"
 import {defineAsyncComponent} from "#imports";
+
 export const openLoginDialog = () => useDialogStore().openSingleDialog({
     type: DialogType.LOGIN,
     options: {},
     component: defineAsyncComponent(() => import("~/components/dialog/login.vue"))
+})
+
+export const openTotpDialog = (activate: boolean) => useDialogStore().openSingleDialog({
+    type: DialogType.TOTP,
+    options: {activate},
+    component: defineAsyncComponent(() => import("~/components/dialog/totp.vue"))
 })
