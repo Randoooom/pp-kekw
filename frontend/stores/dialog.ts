@@ -24,10 +24,46 @@
  *
  */
 
-/**
- * custom validator for vuetify forms which enforces an input
- */
-export const required = () => (value: any) => !!value || "Pflichtfeld";
+import {defineStore} from "pinia";
+import {nanoid} from "nanoid";
 
-export const disabled = (...items: any[]) =>
-    items.some((item: any) => typeof required()(item) === "string");
+export enum DialogType {
+    LOGIN = 0
+}
+
+export interface CreateDialog {
+    type: DialogType;
+    options: Record<string, any>;
+    component: any;
+}
+
+export interface Dialog extends CreateDialog {
+    id: string;
+}
+
+export const useDialogStore = defineStore("dialog", {
+    state: () => ({
+        openDialogs: [] as Dialog[]
+    }),
+    actions: {
+        openDialog(dialog: CreateDialog) {
+            this.openDialogs.push({
+                id: nanoid(),
+                ...dialog
+            });
+        },
+        openSingleDialog(dialog: CreateDialog) {
+            this.openDialogs = this.openDialogs.filter((d) => d.type !== dialog.type)
+            this.openDialog(dialog)
+        },
+        closeDialog(id: string) {
+            this.openDialogs = this.openDialogs.filter((dialog) => dialog.id !== id)
+        },
+        closeAllDialogs() {
+            this.openDialogs = []
+        }
+    },
+    persistedState: {
+        persist: false
+    }
+})

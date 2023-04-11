@@ -28,7 +28,9 @@
   <v-app-bar>
     <v-container>
       <v-row class="align-center">
-        <v-app-bar-nav-icon v-if="isXs"/>
+        <client-only>
+          <v-app-bar-nav-icon v-if="isXs"/>
+        </client-only>
 
         <v-app-bar-title class="d-flex align-center justify-start">
           <NuxtLink :to="localePath('/')" class="font-intro-inline text-white" id="home">
@@ -40,7 +42,7 @@
 
         <v-btn-toggle v-if="!isXs" v-model="route" selected-class="text-accent">
           <v-btn>
-            <NuxtLink to="#about">
+            <NuxtLink :to="localePath('/') + '#about'">
               {{ $t("nav.about") }}
             </NuxtLink>
           </v-btn>
@@ -51,6 +53,8 @@
             </NuxtLink>
           </v-btn>
         </v-btn-toggle>
+
+        <LayoutAccountAvatar class="ml-5" />
       </v-row>
     </v-container>
   </v-app-bar>

@@ -1,4 +1,5 @@
 {
+  "cancel": "Abbrechen",
   "form": {
     "password": {
       "veryWeak": "sehr schwach",
@@ -13,12 +14,18 @@
   },
   "auth": {
     "login": {
+      "title": "Login",
       "success": "Erfolgreich eingeloggt",
-      "failed": "Login fehlerhaft"
+      "failed": "Login fehlerhaft",
+      "totp": "Es ist eine 2-Faktor-Authentifizierung erforderlich",
+      "execute": "Einloggen"
     },
     "logout": {
       "success": "Erfolgreich ausgeloggt"
-    }
+    },
+    "username": "Benutzername",
+    "password": "Passwort",
+    "2fa": "2-Faktor-Authentifizierung"
   },
   "fetch": {
     "unauthorized": "Unzureichende Berechtigungen",
@@ -42,5 +49,12 @@
       "content": "In unserem Forum gibt es neben Ankündigungen, Rangbewerbungen und Entbannungsanträgen auch die Möglichkeit, selbst Dinge anzusprechen, Fragen zu stellen oder Kontakt mit Mitgliedern des Serverteams aufzunehmen.",
       "button": "Zum Forum"
     }
+  },
+  "dashboard": {
+    "title": "Dein Account",
+    "subtitle": "Eingeloggt als {username}",
+    "general": "Allgemeine Einstellungen",
+    "security": "Accountsicherheit",
+    "schematics": "Schematics"
   }
 }

@@ -27,9 +27,8 @@
 import {defineStore} from "pinia";
 import FetchWrapper, {ApiError} from "~/composables/fetch";
 import {FetchResponse} from "ohmyfetch";
-import {navigateTo, useI18n, useRoute, useRouter} from "#imports";
+import {navigateTo, useRoute, useRouter} from "#imports";
 import {localeRoute} from "vue-i18n-routing";
-import {useEmitter} from "~/stores/emitter";
 
 interface Session {
     exp: number;
@@ -92,7 +91,7 @@ export const useAuthStore = defineStore("auth", {
          * check whether the session is active or not
          */
         isLoggedIn(): boolean {
-            if (!this.started) return false;
+            if (!this.started || !this.loggedIn) return false;
             if (typeof this.started === "string")
                 this.started = new Date(this.started);
 
@@ -131,10 +130,8 @@ export const useAuthStore = defineStore("auth", {
                             sessionId: response._data.id,
                             refreshToken: response._data.refreshToken,
                             started: new Date(),
+                            loggedIn: true,
                         });
-
-                        const { t } = useI18n()
-                        useEmitter().emitSuccess(t("auth.login.success"));
 
                         // fetch the account
                         this.fetchAccount();
@@ -183,6 +180,7 @@ export const useAuthStore = defineStore("auth", {
                             sessionId: undefined,
                             started: undefined,
                             refreshToken: undefined,
+                            loggedIn: false,
                         });
                         reject(new AuthenticationError(AuthenticationErrorType.Unauthorized));
                     })
@@ -198,6 +196,7 @@ export const useAuthStore = defineStore("auth", {
                     sessionId: undefined,
                     started: undefined,
                     refreshToken: undefined,
+                    loggedIn: false,
                 })
             );
             // should not require any further processing
@@ -206,9 +205,8 @@ export const useAuthStore = defineStore("auth", {
                 sessionId: undefined,
                 started: undefined,
                 refreshToken: undefined,
+                loggedIn: false
             });
-            const { t } = useI18n()
-            useEmitter().emitSuccess(t("auth.logout.success"));
             await useRouter().push(localeRoute("/")?.path!);
         },
         async fetchAccount() {

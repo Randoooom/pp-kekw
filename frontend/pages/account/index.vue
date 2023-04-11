@@ -25,16 +25,52 @@
   -->
 
 <template>
-  <div>
-    <IndexNewsCarousel/>
-    <IndexAbout/>
-  </div>
+  <v-card>
+    <v-toolbar color="accent">
+      <v-toolbar-title>
+        {{ $t("dashboard.title") }}
+
+        <v-card-subtitle class="pa-0">
+          {{ $t("dashboard.subtitle", {username: account.username}) }}
+        </v-card-subtitle>
+      </v-toolbar-title>
+    </v-toolbar>
+
+    <div class="d-flex flex-row">
+      <v-tabs direction="vertical" v-model="tab">
+        <v-tab value="general">
+          <v-icon start icon="mdi-cog"/>
+          {{ $t("dashboard.general") }}
+        </v-tab>
+
+        <v-tab value="security">
+          <v-icon start icon="mdi-shield-lock-outline" />
+          {{ $t("dashboard.security") }}
+        </v-tab>
+
+        <v-tab value="schematics">
+          <v-icon start icon="mdi-cube-outline" />
+          {{ $t("dashboard.schematics") }}
+        </v-tab>
+      </v-tabs>
+
+      <v-window v-model="tab">
+        <v-window-item value="general">
+          <DashboardAccountGeneral />
+        </v-window-item>
+      </v-window>
+    </div>
+  </v-card>
 </template>
 
 <script lang="ts" setup>
-import {definePageMeta} from "#imports"
+import {definePageMeta, ref} from "#imports";
+import {useAuthStore} from "~/stores/auth";
+
+const account = useAuthStore().account!;
+const tab = ref("general");
 
 definePageMeta({
-  layout: "index"
+  auth: true
 })
 </script>

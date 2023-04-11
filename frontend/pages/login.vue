@@ -24,17 +24,14 @@
   -
   -->
 
-<template>
-  <div>
-    <IndexNewsCarousel/>
-    <IndexAbout/>
-  </div>
-</template>
-
 <script lang="ts" setup>
-import {definePageMeta} from "#imports"
+import {definePageMeta, openLoginDialog, useRouter} from "#imports";
+import {localeRoute} from "vue-i18n-routing";
+
+openLoginDialog()
+useRouter().push(localeRoute("/")!)
 
 definePageMeta({
-  layout: "index"
+  auth: "guest"
 })
 </script>

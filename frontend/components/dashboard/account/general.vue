@@ -25,16 +25,15 @@
   -->
 
 <template>
-  <div>
-    <IndexNewsCarousel/>
-    <IndexAbout/>
-  </div>
+  <v-card flat>
+    <v-card-text>
+      TODO
+    </v-card-text>
+  </v-card>
 </template>
 
 <script lang="ts" setup>
-import {definePageMeta} from "#imports"
+import {useAuthStore} from "~/stores/auth";
 
-definePageMeta({
-  layout: "index"
-})
+const account = useAuthStore().account
 </script>

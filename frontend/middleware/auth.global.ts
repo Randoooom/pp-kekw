@@ -24,10 +24,20 @@
  *
  */
 
-/**
- * custom validator for vuetify forms which enforces an input
- */
-export const required = () => (value: any) => !!value || "Pflichtfeld";
+import {defineNuxtRouteMiddleware, navigateTo} from "#imports";
+import {useAuthStore} from "~/stores/auth";
 
-export const disabled = (...items: any[]) =>
-    items.some((item: any) => typeof required()(item) === "string");
+export default defineNuxtRouteMiddleware((to) => {
+    const auth = to.meta.auth;
+
+    // handle authentication only if needed
+    if (auth) {
+        // use the authStore
+        const loggedIn = useAuthStore().isLoggedIn();
+
+        // validate the auth session
+        if (auth === "guest" && loggedIn) return navigateTo("/");
+        if (!loggedIn && auth !== "guest")
+            return navigateTo("/login");
+    }
+});

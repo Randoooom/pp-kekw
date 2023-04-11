@@ -25,16 +25,45 @@
   -->
 
 <template>
-  <div>
-    <IndexNewsCarousel/>
-    <IndexAbout/>
-  </div>
+  <v-dialog v-model="dialog" persistent>
+    <v-card :max-width="props.maxWidth" class="pt-3 ma-auto" width="100vw">
+      <v-card-title>
+        <slot name="title">
+          <span class="text-h3 font-weight-thin">
+            {{ props.title }}
+          </span>
+        </slot>
+      </v-card-title>
+
+      <v-card-subtitle>
+        <slot name="subtitle" />
+      </v-card-subtitle>
+
+      <v-card-text>
+        <v-row>
+          <slot />
+        </v-row>
+      </v-card-text>
+
+      <v-card-actions>
+        <slot name="actions" />
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
-import {definePageMeta} from "#imports"
+import { computed } from "vue";
 
-definePageMeta({
-  layout: "index"
-})
+
+const props = defineProps({
+  title: {
+    type: String, required: false, default: ""
+  },
+  maxWidth: {
+    type: String, required: false, default: "700px"
+  }
+});
+
+const dialog = computed<boolean>(() => true);
 </script>

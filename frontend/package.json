@@ -31,6 +31,7 @@
     "zxcvbn": "^4.4.2",
     "ofetch": "^1.0.1",
     "pinia-plugin-persistedstate-2": "^2.0.14",
-    "@vueuse/nuxt": "^9.13.0"
+    "@vueuse/nuxt": "^9.13.0",
+    "nanoid": "^4.0.2"
   }
 }

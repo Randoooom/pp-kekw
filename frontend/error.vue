@@ -30,16 +30,12 @@
 
     <div id="content">
       <NuxtLayout>
-        <NuxtErrorBoundary>
-        <template #error="{ error }">
-          {{ error }}
-        </template>
-        </NuxtErrorBoundary>
+        {{ props.error }}
       </NuxtLayout>
     </div>
   </v-app>
 </template>
 
 <script lang="ts" setup>
-
+const props = defineProps({ error: { type: Object, required: true } })
 </script>

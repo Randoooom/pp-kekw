@@ -7436,6 +7436,18 @@
       }
     }
   ],
+  "nanoid!>=4.0.2 <5.0.0-0": [
+    "4.0.2",
+    {
+      "name": "nanoid",
+      "dist": {
+        "tarball": "https://registry.npmjs.org/nanoid/-/nanoid-4.0.2.tgz"
+      },
+      "bin": {
+        "nanoid": "bin/nanoid.js"
+      }
+    }
+  ],
   "natural-compare!>=1.4.0 <2.0.0-0": [
     "1.4.0",
     {

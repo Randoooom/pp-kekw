@@ -24,8 +24,7 @@
  *
  */
 
-import { defineStore } from "pinia";
-import {useI18n} from "#imports";
+import {defineStore} from "pinia";
 
 export type SchemeType = "success" | "info" | "warning" | "error";
 
@@ -56,65 +55,8 @@ export const useEmitter = defineStore("emitter", {
         emit(options: EmitOptions) {
             this.notification = options;
         },
-        /**
-         * emit a new notification with the success template
-         * @param content {string} the message
-         */
-        emitSuccess(content: string) {
-            const { t } = useI18n();
-
-            this.emit({
-                color: "success",
-                content,
-                icon: "mdi-check-circle",
-                buttonText: t("emit.button"),
-                callback: async () => this.clear(),
-            })
-        },
-        /**
-         * emit a new notification with the info template
-         * @param content {string} the message
-         */
-        emitInfo(content: string) {
-            const { t } = useI18n();
-
-            this.emit({
-                color: "info",
-                content,
-                icon: "mdi-info",
-                buttonText: t("emit.button"),
-                callback: async () => this.clear(),
-            })
-        },
-        /**
-         * emit a new notification with the warning template
-         * @param content {string} the message
-         */
-        emitWarning(content: string) {
-            const { t } = useI18n();
-
-            this.emit({
-                color: "warning",
-                content,
-                icon: "mdi-warning",
-                buttonText: t("emit.button"),
-                callback: async () => this.clear(),
-            })
-        },
-        /**
-         * emit a new notification with the error template
-         * @param content {string} the message
-         */
-        emitError(content: string) {
-            const { t } = useI18n();
-
-            this.emit({
-                color: "error",
-                content,
-                icon: "mdi-error",
-                buttonText: t("emit.button"),
-                callback: async () => this.clear(),
-            })
-        },
     },
+    persistedState: {
+        persist: false
+    }
 });

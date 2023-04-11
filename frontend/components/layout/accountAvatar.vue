@@ -25,16 +25,45 @@
   -->
 
 <template>
-  <div>
-    <IndexNewsCarousel/>
-    <IndexAbout/>
+  <div id="layout-account-avatar">
+    <v-hover v-slot="{ isHovering, props }">
+      <div v-bind="props">
+        <v-avatar class="pointer" @click="$router.push(localePath('/account'))">
+          <v-img alt="account" :src="avatar"/>
+        </v-avatar>
+
+        <v-fade-transition>
+          <v-avatar class="pointer" style="background: rgba(0, 0, 0, 0.3); z-index: 100;" v-show="isHovering"
+                    v-if="!auth.isLoggedIn()" @click="openLoginDialog">
+            <v-icon icon="mdi-login"/>
+          </v-avatar>
+        </v-fade-transition>
+      </div>
+    </v-hover>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {definePageMeta} from "#imports"
+import {computed, openLoginDialog} from "#imports";
+import {useAuthStore} from "~/stores/auth";
 
-definePageMeta({
-  layout: "index"
+const auth = useAuthStore();
+
+const avatar = computed(() => {
+  if (auth.isLoggedIn() && auth.account?.uuid)
+    return `https://minotar.net/avatar/${auth.account.uuid}`
+  else
+    return "https://minotar.net/avatar/MHF_Steve"
 })
 </script>
+
+<style lang="sass">
+#layout-account-avatar
+  position: relative
+
+  div
+    .v-avatar
+      position: absolute
+      top: -20px
+      left: 0
+</style>

@@ -24,10 +24,10 @@
  *
  */
 
-/**
- * custom validator for vuetify forms which enforces an input
- */
-export const required = () => (value: any) => !!value || "Pflichtfeld";
-
-export const disabled = (...items: any[]) =>
-    items.some((item: any) => typeof required()(item) === "string");
+import {DialogType, useDialogStore} from "~/stores/dialog"
+import {defineAsyncComponent} from "#imports";
+export const openLoginDialog = () => useDialogStore().openSingleDialog({
+    type: DialogType.LOGIN,
+    options: {},
+    component: defineAsyncComponent(() => import("~/components/dialog/login.vue"))
+})
