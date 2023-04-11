@@ -31,12 +31,12 @@ use chrono::{DateTime, Utc};
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ProtectedAccount {
-    id: Id,
-    username: String,
-    uuid: Option<String>,
-    totp: bool,
-    locked: bool,
-    created_at: DateTime<Utc>,
+    pub id: Id,
+    pub username: String,
+    pub uuid: Option<String>,
+    pub totp: bool,
+    pub locked: bool,
+    pub created_at: DateTime<Utc>,
 }
 
 impl From<Account> for ProtectedAccount {

@@ -27,13 +27,50 @@
 <template>
   <v-card flat>
     <v-card-text>
-      TODO
+      <v-row>
+        <v-col cols="12">
+          <v-text-field :label="$t('auth.username')" color="white" :rules="[required()]" v-model="username"/>
+        </v-col>
+      </v-row>
     </v-card-text>
   </v-card>
 </template>
 
 <script lang="ts" setup>
 import {useAuthStore} from "~/stores/auth";
+import {required} from "~/composables/form";
+import {computed, ref, useI18n, watch} from "#imports";
+import _ from "lodash"
+import {useEmitter} from "~/stores/emitter";
+import Fetch from "~/composables/fetch"
 
-const account = useAuthStore().account
+const emitter = useEmitter();
+const {t} = useI18n();
+
+const account = computed(() => useAuthStore().account)
+const username = ref(_.clone(account.value!.username))
+
+watch(() => account.value!.username !== username.value, (newValue: boolean, oldValue: boolean) => {
+  if (newValue && !oldValue) {
+    emitter.emit({
+      color: "warning",
+      icon: "mdi-alert",
+      content: t("form.changed"),
+      buttonText: t("form.save"),
+      callback: updateUsername
+    })
+  } else
+    emitter.clear()
+})
+
+/**
+ * perform the put request
+ */
+async function updateUsername() {
+  await Fetch.put(`/account/${account.value!.id}`, {
+    body: {
+      username: username.value
+    }
+  }).then(() => useAuthStore().fetchAccount())
+}
 </script>

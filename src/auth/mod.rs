@@ -51,6 +51,14 @@ pub trait Authenticateable {
     fn read_secret(&self, password: &str) -> Result<String>;
 
     fn obtain_encryption_key(&self, password: &str) -> Result<[u8; 32]>;
+
+    async fn change_encryption_key(
+        &mut self,
+        old_password: &str,
+        new_password: &str,
+        token: Option<&str>,
+        connection: &DatabaseConnection,
+    ) -> Result<()>;
 }
 
 /// Derives a (new) key from the given password using argon2id
@@ -77,7 +85,7 @@ pub fn hash_key(key: &[u8; 32]) -> String {
 
 /// This encrypt the given data with the given key (argon2dwr hash) using xChaCha20Poly1305
 #[instrument(skip_all)]
-fn encrypt(key: &[u8; 32], data: &str) -> String {
+pub fn encrypt(key: &[u8; 32], data: &str) -> String {
     // setup the cipher
     let nonce = XChaCha20Poly1305::generate_nonce(&mut OsRng);
     let cipher = XChaCha20Poly1305::new(Key::<XChaCha20Poly1305>::from_slice(key));
@@ -94,7 +102,7 @@ fn encrypt(key: &[u8; 32], data: &str) -> String {
 
 /// This decrypts the given data with the given key (argon2d hash) using xChaCha20Poly1305
 #[instrument(skip_all)]
-fn decrypt(key: &[u8; 32], data: &str) -> String {
+pub fn decrypt(key: &[u8; 32], data: &str) -> String {
     // prepare the cipher
     let cipher = XChaCha20Poly1305::new(Key::<XChaCha20Poly1305>::from_slice(key));
 
@@ -118,7 +126,9 @@ impl Authenticateable for Account {
         // derive the key
         let key = self.obtain_encryption_key(password)?;
         // compare the hashes
-        Argon2::default().verify_password(&key, &PasswordHash::new(self.password.as_str())?)?;
+        Argon2::default()
+            .verify_password(&key, &PasswordHash::new(self.password.as_str())?)
+            .map_err(|_| ApplicationError::Unauthorized)?;
 
         // check if totp is required
         if self.totp {
@@ -197,15 +207,50 @@ impl Authenticateable for Account {
     fn obtain_encryption_key(&self, password: &str) -> Result<[u8; 32]> {
         derive_key(password, &SaltString::from_b64(self.nonce().as_str())?)
     }
+
+    #[instrument(skip_all)]
+    async fn change_encryption_key(
+        &mut self,
+        old_password: &str,
+        new_password: &str,
+        token: Option<&str>,
+        connection: &DatabaseConnection,
+    ) -> Result<()> {
+        // try to login with the given credentials
+        self.login(old_password, token).await?;
+        // decrypt the secret
+        let secret = self.read_secret(old_password)?;
+
+        // derive key from the new password
+        let new_salt = SaltString::generate(&mut OsRng);
+        self.set_nonce(new_salt.to_string());
+        let new_key = self.obtain_encryption_key(new_password)?;
+        // encrypt the secret with the new key
+        self.set_secret(encrypt(&new_key, secret.as_str()));
+
+        // hash the key
+        let hash = hash_key(&new_key);
+        // drop the key from the memory
+        drop(new_key);
+        // save the hash
+        self.set_password(hash);
+
+        // save the data into the database
+        let _: Account = sql_span!(connection.update(self.id()).content(&self).await?);
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::auth::{decrypt, derive_key, encrypt, hash_key, Authenticateable};
     use crate::data::account::Account;
+    use crate::database::connect;
     use crate::prelude::Id;
     use argon2::password_hash::rand_core::OsRng;
     use argon2::password_hash::SaltString;
+    use axum::BoxError;
     use chrono::{Duration, Local};
     use totp_rs::{Algorithm, TOTP};
 
@@ -298,5 +343,40 @@ mod tests {
         let decrypted = decrypt(&key, encrypted.as_str());
 
         assert_eq!(plaintext, decrypted);
+    }
+
+    #[tokio::test]
+    async fn test_change_password() -> Result<(), BoxError> {
+        let connection = connect().await?;
+
+        let salt = SaltString::generate(&mut OsRng);
+        let hash = hash_key(&derive_key("password", &salt).unwrap());
+        let mut account = Account {
+            id: Id::new(("account", "nice")),
+            username: "".to_owned(),
+            uuid: None,
+            password: hash,
+            secret: "".to_string(),
+            nonce: salt.to_string(),
+            totp: false,
+            locked: false,
+            created_at: Default::default(),
+        };
+        account.regenerate_secret("password")?;
+        assert!(account.login("password", None).await.is_ok());
+
+        assert!(account
+            .change_encryption_key("wrong", "wrong", None, &connection)
+            .await
+            .is_err());
+
+        assert!(account
+            .change_encryption_key("password", "new", None, &connection)
+            .await
+            .is_ok());
+        assert!(account.login("password", None).await.is_err());
+        assert!(account.login("new", None).await.is_ok());
+
+        Ok(())
     }
 }

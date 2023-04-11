@@ -21,7 +21,7 @@
           </v-banner-text>
 
           <template #actions>
-            <v-btn :loading="notification.loading" @click="notification.callback">
+            <v-btn :loading="notification.loading" @click="notification.callback" :color="notification.color">
               {{ notification.buttonText }}
             </v-btn>
           </template>

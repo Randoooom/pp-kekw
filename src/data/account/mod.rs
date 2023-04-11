@@ -30,9 +30,10 @@ use chrono::{DateTime, Utc};
 pub mod create;
 pub mod protected;
 
-#[derive(Getters, Deserialize, Serialize, Clone, Debug)]
+#[derive(Getters, Deserialize, Serialize, Clone, Debug, Setters)]
 #[cfg_attr(test, derive(PartialEq))]
 #[getset(get = "pub")]
+#[set = "pub"]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
     /// primary and unique identifier

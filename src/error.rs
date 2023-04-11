@@ -27,7 +27,6 @@
 use crate::prelude::*;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use std::error::Error;
 
 #[derive(Error, Debug, OperationIo)]
 pub enum ApplicationError {
@@ -88,12 +87,10 @@ impl IntoResponse for ApplicationError {
             }
             _ => {
                 error!("Err: {}", self.to_string());
-                error!("Caused: {}", self.source().unwrap());
 
                 #[cfg(test)]
                 {
                     println!("Err: {:?}", self.to_string());
-                    println!("Caused: {:?}", self.source().unwrap());
                 }
 
                 (

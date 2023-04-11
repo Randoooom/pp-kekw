@@ -24,6 +24,7 @@
  *
  */
 
+use crate::auth::encrypt;
 use crate::data::account::Account;
 use crate::prelude::*;
 use argon2::password_hash::rand_core::OsRng;
@@ -48,6 +49,8 @@ impl CreateAccount {
 
         // generate a secret
         let secret = Secret::generate_secret().to_string();
+        let secret = encrypt(&key, secret.as_str());
+        drop(key);
 
         // create the new account
         let account: Account = connection

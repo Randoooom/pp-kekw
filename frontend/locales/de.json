@@ -7,7 +7,11 @@
       "medium": "medium",
       "strong": "stark",
       "veryStrong": "sehr stark"
-    }
+    },
+    "save": "Speichern",
+    "changed": "Du hast ungespeicherte Modifikationen!",
+    "activate": "Aktivieren",
+    "deactivate": "Deaktivieren"
   },
   "emit": {
     "button": "Okay"
@@ -25,7 +29,13 @@
     },
     "username": "Benutzername",
     "password": "Passwort",
-    "2fa": "2-Faktor-Authentifizierung"
+    "newPassword": "Neues Passwort",
+    "confirmNewPassword": "Neues Passwort erneut eingeben",
+    "2fa": "2-Faktor-Authentifizierung",
+    "passwordChange": {
+      "success": "Das Passwort wurde erfolgreich gewechselt",
+      "error": "Es ist ein Fehler aufgetreten, bitte validiere deine Angaben!"
+    }
   },
   "fetch": {
     "unauthorized": "Unzureichende Berechtigungen",
@@ -53,8 +63,11 @@
   "dashboard": {
     "title": "Dein Account",
     "subtitle": "Eingeloggt als {username}",
-    "general": "Allgemeine Einstellungen",
-    "security": "Accountsicherheit",
-    "schematics": "Schematics"
+    "general": "Allgemein",
+    "security": "Sicherheit",
+    "schematics": "Schematics",
+    "changePassword": "Neues Passwort setzen",
+    "2faActive": "Die 2-Faktor-Authentifizierung ist aktiv",
+    "2faDisabled": "Aktiviere die 2-Faktor-Authentifizierung um mehr Sicherheit zu erlangen"
   }
 }

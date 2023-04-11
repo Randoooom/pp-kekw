@@ -36,8 +36,8 @@
       </v-toolbar-title>
     </v-toolbar>
 
-    <div class="d-flex flex-row">
-      <v-tabs direction="vertical" v-model="tab">
+    <div :class="isXs ? '' : 'd-flex flex-row'">
+      <v-tabs direction="vertical" v-model="tab" color="accent">
         <v-tab value="general">
           <v-icon start icon="mdi-cog"/>
           {{ $t("dashboard.general") }}
@@ -54,9 +54,13 @@
         </v-tab>
       </v-tabs>
 
-      <v-window v-model="tab">
+      <v-window v-model="tab" class="mt-5" style="width: 100%">
         <v-window-item value="general">
           <DashboardAccountGeneral />
+        </v-window-item>
+
+        <v-window-item value="security">
+          <DashboardAccountSecurity />
         </v-window-item>
       </v-window>
     </div>

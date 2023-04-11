@@ -28,10 +28,10 @@ use crate::data::account::create::CreateAccount;
 use crate::data::account::protected::ProtectedAccount;
 use crate::data::account::Account;
 use crate::prelude::*;
-use aide::axum::routing::{get_with, post_with};
+use aide::axum::routing::{get_with, post_with, put_with};
 use aide::axum::ApiRouter;
 use aide::transform::TransformOperation;
-use axum::extract::State;
+use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Extension;
 
@@ -43,6 +43,11 @@ pub fn router(state: ApplicationState) -> ApiRouter {
         .api_route(
             "/me",
             get_with(get_me, get_me_docs).layer(require_session!(state, DEFAULT)),
+        )
+        .api_route(
+            "/:account_id",
+            put_with(update_account_username, update_account_username_docs)
+                .layer(require_session!(state, DEFAULT)),
         )
         .nest_api_service("/:account_id/schematic", schematic::router(state.clone()))
         .with_state(state)
@@ -70,6 +75,43 @@ async fn get_me(Extension(account): Extension<Account>) -> Result<Json<Protected
 
 fn get_me_docs(op: TransformOperation) -> TransformOperation {
     op.description("Get authenticated account")
+        .response::<200, Json<ProtectedAccount>>()
+        .security_requirement("Session")
+}
+
+#[derive(Deserialize, JsonSchema, Debug, Clone)]
+pub struct ChangeUsernameRequest {
+    username: String,
+}
+
+async fn update_account_username(
+    State(state): State<ApplicationState>,
+    Extension(mut account): Extension<Account>,
+    Path(id): Path<Id>,
+    Json(data): Json<ChangeUsernameRequest>,
+) -> Result<Json<ProtectedAccount>> {
+    let connection = state.connection();
+
+    if id.eq(account.id()) {
+        account.username = data.username;
+        // save into the database
+        sql_span!(connection
+            .query("UPDATE $account SET username = $username")
+            .bind(("account", account.id().to_thing()))
+            .bind(("username", account.username()))
+            .await?
+            .check()?);
+
+        Ok(Json(ProtectedAccount::from(account)))
+    } else {
+        Err(ApplicationError::BadRequest(
+            "not implemented yet".to_owned(),
+        ))
+    }
+}
+
+fn update_account_username_docs(op: TransformOperation) -> TransformOperation {
+    op.description("change username")
         .response::<200, Json<ProtectedAccount>>()
         .security_requirement("Session")
 }
@@ -116,6 +158,29 @@ mod tests {
 
         let fetched = response.json::<ProtectedAccount>().await;
         assert_eq!(ProtectedAccount::from(suite.account().clone()), fetched);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_change_username() -> Result<(), BoxError> {
+        let suite = TestSuite::start().await?;
+
+        let session = suite.authenticate("username", "password", None).await;
+        let response = suite
+            .connector()
+            .put(format!("/account/{}", suite.account().id().to_string()).as_str())
+            .header(AUTHORIZATION, session.as_str())
+            .json(&serde_json::json!({
+                "username": "other"
+            }))
+            .send()
+            .await;
+        assert_eq!(StatusCode::OK, response.status());
+
+        let account = response.json::<ProtectedAccount>().await;
+        assert_eq!("other", account.username.as_str());
+        assert!(suite.try_login("other", "password", None).await.is_ok());
 
         Ok(())
     }

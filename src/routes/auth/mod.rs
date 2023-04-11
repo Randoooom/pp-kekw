@@ -37,6 +37,9 @@ use axum::Extension;
 #[cfg(not(debug_assertions))]
 use hcaptcha::{HcaptchaCaptcha, HcaptchaClient, HcaptchaRequest};
 
+mod password;
+mod totp;
+
 pub fn router(state: ApplicationState) -> ApiRouter {
     ApiRouter::new()
         .api_route("/login", post_with(login, login_docs))
@@ -45,6 +48,8 @@ pub fn router(state: ApplicationState) -> ApiRouter {
             post_with(logout, logout_docs).layer(require_session!(state, DEFAULT)),
         )
         .api_route("/refresh", post_with(refresh, refresh_docs))
+        .nest_api_service("/password", password::router(state.clone()))
+        .nest_api_service("/totp", totp::router(state.clone()))
         .with_state(state)
 }
 
