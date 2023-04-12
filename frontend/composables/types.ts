@@ -31,3 +31,9 @@ export interface News {
     extension?: string;
     created_at: Date;
 }
+
+export interface SchematicEntry {
+    id: string;
+    name: string;
+    owner: string;
+}

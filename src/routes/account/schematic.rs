@@ -122,7 +122,7 @@ async fn upload(
             let encoded = openssl::base64::encode_block(data.as_slice());
 
             // save into the database
-            sql_span!(
+            let _: Schematic = sql_span!(
                 connection
                     .create("schematic")
                     .content(&serde_json::json! ({
@@ -188,7 +188,10 @@ async fn download(
             );
             headers.insert(
                 CONTENT_DISPOSITION,
-                HeaderValue::from_str("attachment; filename=\"Cargo.toml\"").unwrap(),
+                HeaderValue::from_str(
+                    format!("attachment; filename=\"{}\"", schematic.name()).as_str(),
+                )
+                .unwrap(),
             );
 
             Ok((headers, body))
@@ -226,7 +229,7 @@ pub async fn delete(
         .clone()
         .ok_or(ApplicationError::Unauthorized)?)
     {
-        sql_span!(connection.delete(&id).await?);
+        let _: Schematic = sql_span!(connection.delete(&id).await?);
 
         Ok(Json(DeletionResponse::from(true)))
     } else {

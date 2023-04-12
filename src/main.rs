@@ -90,7 +90,12 @@ pub async fn router(connection: DatabaseConnection) -> Result<Router, BoxError> 
                     Method::HEAD,
                     Method::OPTIONS,
                 ])
-                .allow_headers(vec![header::AUTHORIZATION, header::CONTENT_TYPE]),
+                .allow_headers(vec![
+                    header::AUTHORIZATION,
+                    header::CONTENT_TYPE,
+                    header::CONTENT_DISPOSITION,
+                ])
+                .expose_headers(vec![header::CONTENT_DISPOSITION]),
         )
         .layer(Extension(Arc::new(api))))
 }

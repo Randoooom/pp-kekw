@@ -12,7 +12,12 @@
     "changed": "Du hast ungespeicherte Modifikationen!",
     "activate": "Aktivieren",
     "deactivate": "Deaktivieren",
-    "confirm": "Bestätigen"
+    "confirm": "Bestätigen",
+    "files": "Dateien",
+    "selectFiles": "Dateien auswählen",
+    "upload": "Hochladen",
+    "deleteSelected": "Ausgewählte löschen",
+    "downloadSelected": "Ausgewählte downloaden"
   },
   "emit": {
     "button": "Okay"
@@ -68,6 +73,8 @@
     "general": "Allgemein",
     "security": "Sicherheit",
     "schematics": "Schematics",
+    "schematicUpload": "Schematics hochladen",
+    "schematicUploadComplete": "Hochladen erfolgreich",
     "changePassword": "Neues Passwort setzen",
     "2faActive": "Die 2-Faktor-Authentifizierung ist aktiv",
     "2faDisabled": "Aktiviere die 2-Faktor-Authentifizierung um mehr Sicherheit zu erlangen",

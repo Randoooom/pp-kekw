@@ -28,8 +28,6 @@ import { ofetch, FetchContext, FetchOptions, FetchResponse } from "ofetch";
 import { useAuthStore } from "~/stores/auth";
 import { useRuntimeConfig } from "#app";
 import { computed } from "vue";
-import {useEmitter} from "~/stores/emitter";
-import {useI18n} from "vue-i18n";
 
 export interface Page<T> {
     data: T[]
@@ -40,6 +38,7 @@ export interface Page<T> {
 
 export interface RequestOptions {
     body?: Record<string, any>;
+    responseType?: string;
 }
 
 export interface ApiError {
@@ -164,7 +163,7 @@ export default class {
      */
     private static async execute<T>(
         route: string,
-        options: FetchOptions<"json">
+        options: RequestOptions
     ): Promise<FetchResponse<T>> {
         // we need to add the `Authorization` Header including the Bearer Token
         // on each request, if a valid session is currently active
@@ -176,6 +175,7 @@ export default class {
         }
 
         return ofetch
+            // @ts-ignore
             .raw<T>(`${apiBase.value}${route}`, options)
             .then((response) => response)
             .catch((context: FetchContext<ApiError>) => {

@@ -62,6 +62,10 @@
         <v-window-item value="security">
           <DashboardAccountSecurity/>
         </v-window-item>
+
+        <v-window-item value="schematics">
+          <DashboardAccountSchematics/>
+        </v-window-item>
       </v-window>
     </div>
   </v-card>
