@@ -32,8 +32,9 @@ use aide::transform::TransformOperation;
 use axum::extract::{BodyStream, Path, Query, State};
 use axum::http::StatusCode;
 use futures::TryStreamExt;
-use tokio::fs::File;
-use tokio::io::BufWriter;
+use image::io::Reader as ImageReader;
+use std::io::Cursor;
+use tokio::io::AsyncReadExt;
 use tokio_util::io::StreamReader;
 
 const CDN_DIR: &str = "cdn";
@@ -46,11 +47,9 @@ pub fn router(state: ApplicationState) -> ApiRouter {
         )
         .api_route(
             "/:news_id",
-            put_with(update_news, update_docs).layer(require_session!(state, NEWS_UPDATE)),
-        )
-        .api_route(
-            "/:news_id/:file_extension",
-            post_with(upload_image, upload_image_docs).layer(require_session!(state, NEWS_UPDATE)),
+            put_with(update_news, update_docs)
+                .post_with(upload_image, upload_image_docs)
+                .layer(require_session!(state, NEWS_UPDATE)),
         )
         .api_route("/shown", get_with(get_shown, get_shown_docs))
         .api_route("/:news_id", get_with(get, get_docs))
@@ -68,7 +67,8 @@ pub fn router(state: ApplicationState) -> ApiRouter {
 #[derive(Deserialize, Debug, Clone, JsonSchema)]
 pub struct CreateNewsRequest {
     /// the content of the news (html supported -> server side xss cleanup)
-    content: String,
+    content: Option<String>,
+    title: String,
 }
 
 /// POST /news
@@ -80,7 +80,7 @@ async fn create(
 
     Ok((
         StatusCode::CREATED,
-        Json(News::new(data.content.as_str(), connection).await?),
+        Json(News::new(data.title.as_str(), data.content.as_deref(), connection).await?),
     ))
 }
 
@@ -90,10 +90,10 @@ fn create_docs(op: TransformOperation) -> TransformOperation {
         .security_requirement_scopes("Session", vec![NEWS_CREATE.id.to_string()])
 }
 
-/// POST /news/:news_id/:file_extension
+/// POST /news/:news_id
 async fn upload_image(
     State(state): State<ApplicationState>,
-    Path((news_id, file_extension)): Path<(String, String)>,
+    Path(news_id): Path<String>,
     body: BodyStream,
 ) -> Result<Json<CreationResponse>> {
     let connection = state.connection();
@@ -105,23 +105,32 @@ async fn upload_image(
             .await?
     );
     match news {
-        Some(mut news) => {
+        Some(_) => {
             let stream_reader = StreamReader::new(
                 body.map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error)),
             );
             futures::pin_mut!(stream_reader);
+            // read the stream
+            let mut buffer = Vec::<u8>::new();
+            stream_reader.read_to_end(&mut buffer).await?;
+
+            // read the image
+            let image_reader = ImageReader::new(Cursor::new(buffer))
+                .with_guessed_format()
+                .map_err(|_| ApplicationError::BadRequest("invalid image data".to_owned()))?;
+            // decode it
+            let image = image_reader
+                .decode()
+                .map_err(|_| ApplicationError::BadRequest("invalid image data".to_owned()))?;
 
             // create the file
             let path = std::path::Path::new(CDN_DIR).join("news");
             tokio::fs::create_dir_all(&path).await?;
-            let path = path.join(news_id).with_extension(file_extension.as_str());
-            let mut file = BufWriter::new(File::create(path).await?);
-            // write the body stream to the file
-            tokio::io::copy(&mut stream_reader, &mut file).await?;
-
-            // save the new file extension
-            news.set_extension(Some(file_extension));
-            connection.update(news.id()).content(news).await?;
+            let path = path.join(news_id).with_extension("png");
+            // write the new decoded image as png
+            image
+                .save(path)
+                .map_err(|_| ApplicationError::InternalServerError)?;
 
             Ok(Json(CreationResponse::from(true)))
         }
@@ -203,12 +212,6 @@ async fn update_news(
 ) -> Result<Json<News>> {
     let connection = state.connection();
 
-    if data.extension().is_none() && *data.shown() {
-        return Err(ApplicationError::BadRequest(
-            "extension has to be set in order to shown news".to_owned(),
-        ));
-    };
-
     let news: News = sql_span!(connection
         .query("UPDATE $news CONTENT $content")
         .bind(("news", Id::try_from(("news", news_id.as_str()))?.to_thing()))
@@ -264,6 +267,7 @@ mod tests {
             .post("/news")
             .header(AUTHORIZATION, session)
             .json(&serde_json::json!({
+                "title": "title",
                 "content": "nice content here",
             }))
             .send()

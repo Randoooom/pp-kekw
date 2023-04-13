@@ -26,9 +26,9 @@
 
 export interface News {
     id: string;
-    content: string;
+    title: string;
     shown: boolean;
-    extension?: string;
+    content?: string;
     createdAt: Date;
 }
 

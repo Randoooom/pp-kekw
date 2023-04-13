@@ -17,7 +17,8 @@
     "selectFiles": "Dateien auswählen",
     "upload": "Hochladen",
     "deleteSelected": "Ausgewählte löschen",
-    "downloadSelected": "Ausgewählte downloaden"
+    "downloadSelected": "Ausgewählte downloaden",
+    "edit": "Bearbeiten"
   },
   "emit": {
     "button": "Okay"
@@ -89,5 +90,9 @@
       "activated": "Die 2-Faktor-Authentifizierung wurde aktiviert",
       "deactivated": "Die 2-Faktor-Authentifizierung wurde deaktiviert"
     }
+  },
+  "news": {
+    "visible": "Sichtbar",
+    "create": "Neuen Eintrag erstellen"
   }
 }

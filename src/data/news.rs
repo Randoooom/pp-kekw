@@ -32,28 +32,29 @@ use chrono::{DateTime, Utc};
 #[serde(rename_all = "camelCase")]
 pub struct News {
     id: Id,
+    title: String,
     /// the content (supports html -> with automatic xss cleanup)
-    content: String,
+    content: Option<String>,
     shown: bool,
-    /// the file extension of the optional image. This has to be `Some` otherwise `shown` will be
-    /// locked at `false`.
-    #[set = "pub"]
-    extension: Option<String>,
     #[serde(alias = "created_at")]
     created_at: DateTime<Utc>,
 }
 
 impl News {
     #[instrument(skip_all)]
-    pub async fn new(content: &str, connection: &DatabaseConnection) -> Result<Self> {
+    pub async fn new(
+        title: &str,
+        content: Option<&str>,
+        connection: &DatabaseConnection,
+    ) -> Result<Self> {
         // cleanup the content
-        let content = ammonia::clean(content);
+        let content = content.and_then(|content| Some(ammonia::clean(content)));
 
         // save into the database
         let news: News = sql_span!(
             connection
                 .create("news")
-                .content(&serde_json::json!({ "content": content }))
+                .content(&serde_json::json!({ "content": content, "title": title }))
                 .await?
         );
 

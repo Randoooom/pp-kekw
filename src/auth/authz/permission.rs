@@ -35,7 +35,7 @@ pub struct Permission {
 
 impl Permission {
     pub fn id(&self) -> String {
-        self.id.to_string()
+        self.id.to_string().replace('⟨', "").replace('⟩', "")
     }
 
     pub fn to_thing(&self) -> Thing {
@@ -97,11 +97,7 @@ pub async fn init_permissions(connection: &DatabaseConnection) -> Result<()> {
     let mut query = String::new();
     PERMISSIONS
         .iter()
-        .filter(|permission| {
-            !permissions
-                .iter()
-                .any(|p| p.id.to_string().eq(&permission.id()))
-        })
+        .filter(|permission| !permissions.iter().any(|p| p.id().eq(&permission.id())))
         .for_each(|permission| {
             query.push_str(
                 format!("CREATE type::thing('permission', '{}');", &permission.id.id).as_str(),

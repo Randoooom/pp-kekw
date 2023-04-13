@@ -39,8 +39,14 @@
     </template>
 
     <v-carousel-item v-for="entry in news" :key="entry.id"
-                     :src="`${runtimeConfig.public.apiBase}/cdn/news/${entry.id}.${entry.extension}`" cover>
-      <div class="cover d-flex align-center justify-center font-intro-inline" v-html="entry.content"/>
+                     :src="`${runtimeConfig.public.apiBase}/cdn/news/${entry.id}.png`" cover>
+      <div class="cover d-flex align-center justify-center flex-column font-intro-inline">
+        <span class="text-h1 font-intro-inline">
+          {{ entry.title }}
+        </span>
+
+        <div v-html="entry.content"/>
+      </div>
     </v-carousel-item>
   </v-carousel>
 </template>

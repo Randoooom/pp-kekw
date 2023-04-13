@@ -28,7 +28,8 @@ DEFINE TABLE event SCHEMAFULL;
     DEFINE FIELD created_at     on event TYPE datetime      VALUE $before OR time::now();
 
 DEFINE TABLE news SCHEMAFULL;
-    DEFINE FIELD content        on news TYPE string    ASSERT $value IS NOT NULL;
+    DEFINE FIELD title          on news TYPE string    ASSERT $value IS NOT NULL;
+    DEFINE FIELD content        on news TYPE string;
     DEFINE FIELD shown          on news TYPE bool      VALUE $value OR FALSE;
     DEFINE FIELD extension      on news TYPE string;
     DEFINE FIELD created_at     on news TYPE datetime  VALUE $before OR time::now();
