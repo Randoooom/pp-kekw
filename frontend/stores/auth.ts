@@ -29,6 +29,7 @@ import FetchWrapper, {ApiError} from "~/composables/fetch";
 import {navigateTo, useRoute} from "#imports";
 import {localeRoute} from "vue-i18n-routing";
 import {FetchResponse} from "ofetch";
+import {useEmitter} from "~/stores/emitter";
 
 interface Session {
     exp: number;
@@ -85,8 +86,19 @@ export const useAuthStore = defineStore("auth", {
         refreshToken: undefined as string | undefined,
         started: undefined as Date | undefined,
         loggedIn: false,
+        permissions: [] as string[]
     }),
     actions: {
+        clear() {
+            this.$patch({
+                account: undefined,
+                loggedIn: false,
+                sessionId: undefined,
+                refreshToken: undefined,
+                started: undefined,
+                permissions: []
+            })
+        },
         /**
          * check whether the session is active or not
          */
@@ -99,13 +111,7 @@ export const useAuthStore = defineStore("auth", {
             const valid =
                 this.started.getTime() + 1000 * 60 * 30 > new Date().getTime();
             if (!valid) {
-                this.$patch({
-                    account: undefined,
-                    loggedIn: false,
-                    sessionId: undefined,
-                    refreshToken: undefined,
-                    started: undefined,
-                });
+                this.clear();
 
                 // check if the route need further authorization
                 const route = useRoute();
@@ -133,6 +139,12 @@ export const useAuthStore = defineStore("auth", {
                             loggedIn: true,
                         });
 
+                        useEmitter().emit({
+                            color: "success",
+                            content: "auth.login.success",
+                            icon: "mdi-check",
+                        })
+
                         // fetch the account
                         this.fetchAccount();
 
@@ -144,10 +156,22 @@ export const useAuthStore = defineStore("auth", {
                             response.status === 403 &&
                             response._data.error === "TOTP is required"
                         ) {
+                            useEmitter().emit({
+                                color: "warning",
+                                content: "auth.login.totp",
+                                icon: "mdi-alert",
+                            })
+
                             reject(
                                 new AuthenticationError(AuthenticationErrorType.TotpNeeded)
                             );
                         } else {
+                            useEmitter().emit({
+                                color: "error",
+                                content: "auth.login.failed",
+                                icon: "mdi-alert-circle-outline",
+                            })
+
                             reject(
                                 new AuthenticationError(AuthenticationErrorType.Unauthorized)
                             );
@@ -175,13 +199,7 @@ export const useAuthStore = defineStore("auth", {
                     resolve();
                 })
                     .catch(() => {
-                        this.$patch({
-                            account: undefined,
-                            sessionId: undefined,
-                            started: undefined,
-                            refreshToken: undefined,
-                            loggedIn: false,
-                        });
+                        this.clear();
                         reject(new AuthenticationError(AuthenticationErrorType.Unauthorized));
                     })
             })
@@ -191,22 +209,10 @@ export const useAuthStore = defineStore("auth", {
          */
         async logout() {
             await FetchWrapper.post("/auth/logout", {}).catch(() =>
-                this.$patch({
-                    account: undefined,
-                    sessionId: undefined,
-                    started: undefined,
-                    refreshToken: undefined,
-                    loggedIn: false,
-                })
-            );
-            // should not require any further processing
-            this.$patch({
-                account: undefined,
-                sessionId: undefined,
-                started: undefined,
-                refreshToken: undefined,
-                loggedIn: false
-            });
+                this.clear()
+            ).then(() =>
+                // should not require any further processing
+                this.clear())
         },
         async fetchAccount() {
             // only allow loggedIn session to do that action
@@ -216,7 +222,7 @@ export const useAuthStore = defineStore("auth", {
                 );
 
             // fetch the account from the api
-            FetchWrapper.get<ProtectedAccount>("/account/me")
+            await FetchWrapper.get<ProtectedAccount>("/account/me")
                 .then((response) => {
                     // replace the account
                     this.account = response._data!;
@@ -226,6 +232,18 @@ export const useAuthStore = defineStore("auth", {
                     if (response.status === 401)
                         await this.refresh().then(async () => await this.fetchAccount())
                 });
+
+            await FetchWrapper.get<string[]>(`/account/${this.account!.id}/permissions`)
+                .then((response) => {
+                    this.permissions = response._data!;
+                })
         },
+        /**
+         * check if the account has the required permissions
+         * @param permission {string} the permission
+         */
+        hasPermission(permission: string): boolean {
+            return this.permissions.some((p) => p === permission)
+        }
     },
 });

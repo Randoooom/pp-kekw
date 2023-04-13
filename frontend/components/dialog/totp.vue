@@ -131,10 +131,8 @@ async function confirmPassword() {
       loading.value = false;
       emitter.emit({
         color: "error",
-        content: t("auth.passwordChange.error"),
-        callback: async () => emitter.clear(),
+        content: "auth.passwordChange.error",
         icon: "mdi-alert-circle-outline",
-        buttonText: t("emit.button"),
       })
     })
   } else {
@@ -158,18 +156,14 @@ async function toggle() {
     if (props.options!.activate)
       emitter.emit({
         color: "success",
-        content: t("dashboard.2fa.activated"),
-        buttonText: t("emit.button"),
+        content: "dashboard.2fa.activated",
         icon: "mdi-check",
-        callback: async () => emitter.clear()
       });
     else
       emitter.emit({
         color: "warning",
-        content: t("dashboard.2fa.deactivated"),
-        buttonText: t("emit.button"),
+        content: "dashboard.2fa.deactivated",
         icon: "mdi-alert",
-        callback: async () => emitter.clear()
       });
 
     await useAuthStore().fetchAccount()
@@ -179,10 +173,8 @@ async function toggle() {
     loading.value = false;
     emitter.emit({
       color: "error",
-      content: t("auth.passwordChange.error"),
-      callback: async () => emitter.clear(),
+      content: "auth.passwordChange.error",
       icon: "mdi-alert-circle-outline",
-      buttonText: t("emit.button"),
     })
   })
 }

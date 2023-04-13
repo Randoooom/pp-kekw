@@ -63,8 +63,8 @@ watch(() => account.value!.username !== username.value, (newValue: boolean, oldV
     emitter.emit({
       color: "warning",
       icon: "mdi-alert",
-      content: t("form.changed"),
-      buttonText: t("form.save"),
+      content:"form.changed",
+      buttonText: "form.save",
       callback: updateUsername
     })
   } else
@@ -91,9 +91,7 @@ async function logout() {
         useEmitter().emit({
           icon: "mdi-check",
           color: "success",
-          content: t("auth.logout.success"),
-          callback: async () => useEmitter().clear(),
-          buttonText: t("emit.button")
+          content: "auth.logout.success",
         })
 
         await useRouter().push("/")

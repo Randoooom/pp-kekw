@@ -30,12 +30,39 @@
 
     <div id="content">
       <NuxtLayout>
-        {{ props.error }}
+        <v-card variant="tonal">
+          <v-card-title id="error-title-bg">
+            <span class="text-h2 font-intro-inline">
+              Error {{ error.statusCode }}
+            </span>
+          </v-card-title>
+
+          <v-card-subtitle>
+            {{ error.statusMessage }}
+          </v-card-subtitle>
+
+          <v-card-text>
+              <span class="text-h5 font-weight-thin">
+                {{ error.message }}
+              </span>
+
+            <div id="error-stack" class="pa-5 mt-8" v-html="error.stack" />
+          </v-card-text>
+        </v-card>
       </NuxtLayout>
     </div>
   </v-app>
 </template>
 
 <script lang="ts" setup>
-const props = defineProps({ error: { type: Object, required: true } })
+const props = defineProps({error: {type: Object, required: true}})
 </script>
+
+<style lang="sass" scoped>
+#error-title-bg
+  background: linear-gradient(180deg, rgba(73, 0, 30, 1) 0%, rgba(140, 0, 0, 1) 100%)
+
+#error-stack
+  border: 1px solid grey
+  border-radius: 5px
+</style>

@@ -136,10 +136,8 @@ async function changePassword() {
     loading.value = false;
     emitter.emit({
       color: "success",
-      buttonText: t("emit.button"),
-      content: t("auth.passwordChange.success"),
+      content: "auth.passwordChange.success",
       icon: "mdi-check",
-      callback: async () => emitter.clear()
     })
 
     newPassword.value = "";
@@ -150,10 +148,8 @@ async function changePassword() {
     loading.value = false;
     emitter.emit({
       color: "error",
-      buttonText: t("emit.button"),
-      content: t("auth.passwordChange.error"),
+      content: "auth.passwordChange.error",
       icon: "mdi-alert-circle-outline",
-      callback: async () => emitter.clear()
     })
   })
 }

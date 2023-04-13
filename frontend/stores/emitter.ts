@@ -37,6 +37,14 @@ export interface EmitOptions {
     loading?: boolean;
 }
 
+const DefaultEmitOptions: EmitOptions = {
+    color: "success",
+    content: "",
+    icon: "mdi-check",
+    buttonText: "emit.button",
+    callback: async () => useEmitter().clear(),
+}
+
 export const useEmitter = defineStore("emitter", {
     state: () => ({
         notification: undefined as EmitOptions | undefined,
@@ -53,7 +61,7 @@ export const useEmitter = defineStore("emitter", {
          * @param options {EmitOptions} the banner options
          */
         emit(options: EmitOptions) {
-            this.notification = options;
+            this.notification = {...DefaultEmitOptions, ...options};
         },
     },
     persistedState: {

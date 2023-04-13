@@ -59,9 +59,8 @@
 
 <script lang="ts" setup>
 import {useDialogStore} from "~/stores/dialog";
-import {ref, required, disabled, useI18n, useRouter} from "#imports";
+import {ref, required, disabled, useRouter} from "#imports";
 import {AuthenticationError, AuthenticationErrorType, useAuthStore} from "~/stores/auth";
-import {useEmitter} from "~/stores/emitter";
 import {localePath} from "vue-i18n-routing";
 
 const username = ref("");
@@ -73,8 +72,6 @@ const totpNeeded = ref(false);
 const props = defineProps({
   id: {type: String, required: true}
 })
-const {t} = useI18n();
-const emitter = useEmitter();
 
 /**
  * perform the login request
@@ -90,14 +87,6 @@ async function login() {
   }).then(() => {
     loading.value = false;
 
-    emitter.emit({
-      color: "success",
-      content: t("auth.login.success"),
-      buttonText: t("emit.button"),
-      icon: "mdi-check",
-      callback: async () => emitter.clear()
-    })
-
     // login was successful, so we just close the dialog and redirect to the dashboard
     useDialogStore().closeDialog(props.id!)
     useRouter().push(localePath("/account"))
@@ -105,24 +94,8 @@ async function login() {
       .catch((error: AuthenticationError) => {
         loading.value = false;
         // login failed
-        if (error.type === AuthenticationErrorType.TotpNeeded) {
+        if (error.type === AuthenticationErrorType.TotpNeeded)
           totpNeeded.value = true
-
-          emitter.emit({
-            color: "warning",
-            content: t("auth.login.totp"),
-            buttonText: t("emit.button"),
-            icon: "mdi-alert",
-            callback: async () => emitter.clear()
-          })
-        } else
-          emitter.emit({
-            color: "error",
-            content: t("auth.login.failed"),
-            buttonText: t("emit.button"),
-            icon: "mdi-alert-circle-outline",
-            callback: async () => emitter.clear()
-          })
       })
 }
 

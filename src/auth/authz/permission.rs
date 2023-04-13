@@ -35,14 +35,11 @@ pub struct Permission {
 
 impl Permission {
     pub fn id(&self) -> String {
-        self.id.to_string().replace('.', "")
+        self.id.to_string()
     }
 
     pub fn to_thing(&self) -> Thing {
-        Thing::from((
-            "permission",
-            self.id.id.to_string().replace('.', "").as_str(),
-        ))
+        Thing::from(("permission", self.id.id.to_string().as_str()))
     }
 }
 
@@ -88,7 +85,9 @@ permissions!(
     // --------------------------------
     (EVENT_FIGHT_CREATE, "event.fight.create"),
     (EVENT_FIGHT_UPDATE, "event.fight.update"),
-    (EVENT_FIGHT_DELETE, "event.fight.delete")
+    (EVENT_FIGHT_DELETE, "event.fight.delete"),
+    // --------------------------------
+    (ACCOUNT_PERMISSION_GET, "account.permission.get")
 );
 
 pub async fn init_permissions(connection: &DatabaseConnection) -> Result<()> {
@@ -105,7 +104,7 @@ pub async fn init_permissions(connection: &DatabaseConnection) -> Result<()> {
         })
         .for_each(|permission| {
             query.push_str(
-                format!("CREATE {};", &permission.id.to_string().replace('.', "")).as_str(),
+                format!("CREATE type::thing('permission', '{}');", &permission.id.id).as_str(),
             )
         });
     if !query.is_empty() {

@@ -77,9 +77,8 @@ async function upload() {
 
   useEmitter().emit({
     icon: "mdi-upload-outline",
-    content: t("dashboard.schematicUploadComplete"),
+    content: "dashboard.schematicUploadComplete",
     color: "success",
-    buttonText: t("emit.button"),
     callback: async () => {
       progress.value = 0;
       loading.value = false;

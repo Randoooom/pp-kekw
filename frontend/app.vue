@@ -17,12 +17,12 @@
         <v-banner v-if="notification" :color="notification.color" :icon="notification.icon"
                   id="banner-emitter">
           <v-banner-text>
-            {{ notification.content }}
+            {{ $t(notification.content) }}
           </v-banner-text>
 
           <template #actions>
             <v-btn :loading="notification.loading" @click="notification.callback" :color="notification.color">
-              {{ notification.buttonText }}
+              {{ $t(notification.buttonText) }}
             </v-btn>
           </template>
         </v-banner>
