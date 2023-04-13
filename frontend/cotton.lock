@@ -7642,6 +7642,15 @@
       }
     }
   ],
+  "moment!>=2.29.4 <3.0.0-0": [
+    "2.29.4",
+    {
+      "name": "moment",
+      "dist": {
+        "tarball": "https://registry.npmjs.org/moment/-/moment-2.29.4.tgz"
+      }
+    }
+  ],
   "mri!>=1.2.0 <2.0.0-0": [
     "1.2.0",
     {

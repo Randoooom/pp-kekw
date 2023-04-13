@@ -50,7 +50,8 @@
   },
   "nav": {
     "about": "Über uns",
-    "events": "Events"
+    "events": "Events",
+    "news": "News"
   },
   "about": {
     "community": {
@@ -73,6 +74,11 @@
     "general": "Allgemein",
     "security": "Sicherheit",
     "schematics": "Schematics",
+    "schematic": {
+      "name": "Name",
+      "id": "id",
+      "actions": "Aktionen"
+    },
     "schematicUpload": "Schematics hochladen",
     "schematicUploadComplete": "Hochladen erfolgreich",
     "changePassword": "Neues Passwort setzen",

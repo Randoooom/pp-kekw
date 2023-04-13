@@ -27,7 +27,7 @@
 <template>
   <v-dialog v-model="dialog" persistent>
     <v-card :max-width="props.maxWidth" class="ma-auto" rounded="lg" width="100vw">
-      <v-card-title class="dialog-title-bg pt-3">
+      <v-card-title class="bg-gradient pt-3">
         <slot name="title">
           <span class="text-h3 font-intro-inline">
             {{ props.title }}
@@ -67,8 +67,3 @@ const props = defineProps({
 
 const dialog = computed<boolean>(() => true);
 </script>
-
-<style lang="sass" scoped>
-.dialog-title-bg
-  background: linear-gradient(180deg, rgba(73, 0, 30, 1) 0%, rgba(140, 0, 0, 1) 100%)
-</style>

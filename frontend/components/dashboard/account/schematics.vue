@@ -32,15 +32,15 @@
         <tr>
           <th class="text-left d-flex align-center">
             <v-checkbox-btn v-model="selectAll" class="pe-2"/>
-            Name
+            {{ $t("dashboard.schematic.name") }}
           </th>
 
           <th class="text-left">
-            Id
+            {{ $t("dashboard.schematic.id") }}
           </th>
 
           <th class="text-left">
-            Aktionen
+            {{ $t("dashboard.schematic.actions") }}
           </th>
         </tr>
         </thead>

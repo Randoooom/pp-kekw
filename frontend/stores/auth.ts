@@ -243,7 +243,7 @@ export const useAuthStore = defineStore("auth", {
          * @param permission {string} the permission
          */
         hasPermission(permission: string): boolean {
-            return this.permissions.some((p) => p === permission)
+            return this.permissions.some((p) => p.startsWith(`permission:⟨${permission}`))
         }
     },
 });

@@ -29,7 +29,7 @@ export interface News {
     content: string;
     shown: boolean;
     extension?: string;
-    created_at: Date;
+    createdAt: Date;
 }
 
 export interface SchematicEntry {

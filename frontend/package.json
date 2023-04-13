@@ -33,6 +33,7 @@
     "pinia-plugin-persistedstate-2": "^2.0.14",
     "@vueuse/nuxt": "^9.13.0",
     "nanoid": "^4.0.2",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4"
   }
 }

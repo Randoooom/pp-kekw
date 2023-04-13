@@ -1,6 +1,7 @@
 <template>
   <v-app>
     <LayoutAppBar/>
+    <LayoutNavigationDrawer/>
 
     <div id="content">
       <NuxtLayout>

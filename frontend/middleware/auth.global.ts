@@ -32,12 +32,17 @@ export default defineNuxtRouteMiddleware((to) => {
 
     // handle authentication only if needed
     if (auth) {
+        const auth = useAuthStore();
         // use the authStore
-        const loggedIn = useAuthStore().isLoggedIn();
+        const loggedIn = auth.isLoggedIn();
 
         // validate the auth session
         if (auth === "guest" && loggedIn) return navigateTo("/");
         if (!loggedIn && auth !== "guest")
             return navigateTo("/login");
+
+        const permission = to.meta.permission as undefined | string;
+        if (permission && !auth.hasPermission(permission))
+            return navigateTo("/");
     }
 });
